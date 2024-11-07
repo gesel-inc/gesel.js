@@ -2,7 +2,7 @@
 
 ## Getting Started
 
-Contributions are made to this repository via [Issues](https://github.com/LTLA/gesel.js/issues) and [Pull Requests (PRs)](https://github.com/LTLA/gesel.js/pulls). 
+Contributions are made to this repository via [Issues](https://github.com/gesel-inc/gesel.js/issues) and [Pull Requests (PRs)](https://github.com/gesel-inc/gesel.js/pulls). 
 Consider searching for existing Issues and PRs before creating your own.
 
 ## Setting up
@@ -11,7 +11,7 @@ Consider searching for existing Issues and PRs before creating your own.
 Assuming that an appropriate Node.js version is available, developers can clone this repository and install **gesel**'s dependencies:
 
 ```sh
-git clone https://github.com/LTLA/gesel.js
+git clone https://github.com/gesel-inc/gesel.js
 cd gesel.js
 npm install
 ```

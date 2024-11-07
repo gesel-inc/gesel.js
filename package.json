@@ -22,13 +22,13 @@
     "jsdoc": "^3.6.10",
     "docdash": "^2.0.1"
   },
-  "bugs": "https://github.com/LTLA/gesel.js/issues",
+  "bugs": "https://github.com/gesel-inc/gesel.js/issues",
   "keywords": [
       "bioinformatics"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/LTLA/gesel.js"
+    "url": "https://github.com/gesel-inc/gesel.js"
   },
   "homepage": "https://ltla.github.io/gesel.js"
 }
