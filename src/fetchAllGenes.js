@@ -51,7 +51,7 @@ export async function fetchAllGenes(species, { types = null } = {}) {
             }
             var buffer = await res.arrayBuffer();
 
-            let gene_data = decompressLines(buffer);
+            let gene_data = await decompressLines(buffer);
             let processed = [];
             for (const x of gene_data) {
                 if (x == "") {

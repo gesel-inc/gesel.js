@@ -9,22 +9,19 @@
     "name": "Aaron Lun",
     "email": "infinite.monkeys.with.keyboards@gmail.com"
   },
-  "dependencies": {
-    "pako": "^2.0.4"
-  },
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --testTimeout=1000000",
     "jsdoc": "npx jsdoc src README.md -d docs/built -c docs/jsdoc.config.json"
   },
   "devDependencies": {
+    "docdash": "^2.0.1",
     "isomorphic-fetch": "^3.0.0",
-    "jest": "^27.4.7",
-    "jsdoc": "^3.6.10",
-    "docdash": "^2.0.1"
+    "jest": "^30.3.0",
+    "jsdoc": "^4.0.5"
   },
   "bugs": "https://github.com/gesel-inc/gesel.js/issues",
   "keywords": [
-      "bioinformatics"
+    "bioinformatics"
   ],
   "repository": {
     "type": "git",

@@ -41,7 +41,7 @@ export async function fetchAllCollections(species, { download = true } = {}) {
     if (!cres.ok) {
         throw new Error("failed to fetch collection information for species '" + species + "'");
     }
-    var coll_data = decompressLines(await cres.arrayBuffer());
+    var coll_data = await decompressLines(await cres.arrayBuffer());
 
     var start = 0;
     for (var i = 0; i < coll_data.length; i++) {

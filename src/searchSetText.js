@@ -119,7 +119,7 @@ export async function preloadTokens(species, resp, ordered, cache, msg) {
         throw new Error("failed to fetch full set of " + msg + " tokens for species '" + species + "'");
     }
 
-    let lines = utils.decompressLines(await resp.arrayBuffer());
+    let lines = await utils.decompressLines(await resp.arrayBuffer());
     if (lines.length !== ordered.length) {
         throw new Error("mismatch in lengths between token names and set indices for species '" + species + "'");
     }

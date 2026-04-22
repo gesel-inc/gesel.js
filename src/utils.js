@@ -1,5 +1,3 @@
-import * as pako from "pako";
-
 export var default_download = (base, file, start, end) => {
     let url = base + "/" + file;
     if (start == null || end == null) {
@@ -118,11 +116,13 @@ export function setGeneDownload(fun) {
     return geneDownload(fun);
 }
 
-export function decompressLines(buffer) {
-    var contents = pako.inflate(new Uint8Array(buffer));
+export async function decompressLines(buffer) {
+    const gunzip = new DecompressionStream("gzip");
+    const gzstr = new Blob([buffer]).stream().pipeThrough(gunzip);
+    const contents = await new Response(gzstr).arrayBuffer();
+
     const txt = new TextDecoder();
     var lines = txt.decode(contents).split("\n");
-
     if (lines[lines.length - 1] == "") {
         return lines.slice(0, lines.length - 1); // remove empty string at trailing newline.
     } else {
@@ -137,7 +137,7 @@ export async function retrieveRanges(resource) {
     }
 
     var buffer = await res.arrayBuffer();
-    var lengths = decompressLines(buffer);
+    var lengths = await decompressLines(buffer);
 
     var ranges = [0];
     for (var i = 0; i < lengths.length; i++) { 
@@ -153,7 +153,7 @@ export async function retrieveNamedRanges(resource) {
     }
 
     var buffer = await res.arrayBuffer();
-    var lines = decompressLines(buffer);
+    var lines = await decompressLines(buffer);
 
     var last = 0;
     var ranges = new Map; 
@@ -176,7 +176,7 @@ export async function retrieveRangesWithExtras(resource) {
     }
 
     var buffer = await res.arrayBuffer();
-    var lines = decompressLines(buffer);
+    var lines = await decompressLines(buffer);
 
     var ranges = [0];
     var extra = [];

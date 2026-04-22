@@ -28,7 +28,7 @@ export async function fetchGenesForAllSets(species, { download = true } = {}) {
         throw new Error("failed to fetch full set-to-gene information for species '" + species + "'");
     }
 
-    var set_data = utils.decompressLines(await res.arrayBuffer());
+    var set_data = await utils.decompressLines(await res.arrayBuffer());
     let loaded = set_data.map(utils.convertToUint32Array);
     _cache.set(species, loaded);
     return loaded;

@@ -38,7 +38,7 @@ export async function fetchAllSets(species, { download = true } = {}) {
     if (!sres.ok) {
         throw new Error("failed to fetch set information for species '" + species + "'");
     }
-    var set_data = decompressLines(await sres.arrayBuffer());
+    var set_data = await decompressLines(await sres.arrayBuffer());
 
     for (var i = 0; i < set_data.length; i++) {
         let x = set_data[i];

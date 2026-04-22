@@ -29,7 +29,7 @@ export async function fetchEmbeddings(species, { download = true } = {}) {
         throw new Error("failed to fetch embeddings for species '" + species + "'");
     }
 
-    let embed_data = utils.decompressLines(await res.arrayBuffer());
+    let embed_data = await utils.decompressLines(await res.arrayBuffer());
     let loaded = convertToCoordinates(embed_data);
 
     _cache.set(species, loaded);
