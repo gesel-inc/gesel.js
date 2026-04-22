@@ -31,7 +31,7 @@
     <input type="text" id="nav-search" placeholder="Search" />
     
     
-    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.roche.com/GP/gesel" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Global</h3><ul><li><a href="global.html#adjustFdr">adjustFdr</a></li><li><a href="global.html#computeEnrichmentCurve">computeEnrichmentCurve</a></li><li><a href="global.html#countSetOverlaps">countSetOverlaps</a></li><li><a href="global.html#effectiveNumberOfGenes">effectiveNumberOfGenes</a></li><li><a href="global.html#fetchAllCollections">fetchAllCollections</a></li><li><a href="global.html#fetchAllGenes">fetchAllGenes</a></li><li><a href="global.html#fetchAllSets">fetchAllSets</a></li><li><a href="global.html#fetchCollectionSizes">fetchCollectionSizes</a></li><li><a href="global.html#fetchEmbeddings">fetchEmbeddings</a></li><li><a href="global.html#fetchGenesForAllSets">fetchGenesForAllSets</a></li><li><a href="global.html#fetchGenesForSet">fetchGenesForSet</a></li><li><a href="global.html#fetchSetsForAllGenes">fetchSetsForAllGenes</a></li><li><a href="global.html#fetchSetsForGene">fetchSetsForGene</a></li><li><a href="global.html#fetchSetSizes">fetchSetSizes</a></li><li><a href="global.html#fetchSingleCollection">fetchSingleCollection</a></li><li><a href="global.html#fetchSingleSet">fetchSingleSet</a></li><li><a href="global.html#findOverlappingSets">findOverlappingSets</a></li><li><a href="global.html#geneBaseUrl">geneBaseUrl</a></li><li><a href="global.html#geneDownload">geneDownload</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#mapGenesByIdentifier">mapGenesByIdentifier</a></li><li><a href="global.html#numberOfCollections">numberOfCollections</a></li><li><a href="global.html#numberOfSets">numberOfSets</a></li><li><a href="global.html#preloadSearchSetText">preloadSearchSetText</a></li><li><a href="global.html#referenceBaseUrl">referenceBaseUrl</a></li><li><a href="global.html#referenceDownload">referenceDownload</a></li><li><a href="global.html#reindexGenesForAllSets">reindexGenesForAllSets</a></li><li><a href="global.html#reindexSetsForAllGenes">reindexSetsForAllGenes</a></li><li><a href="global.html#searchGenes">searchGenes</a></li><li><a href="global.html#searchSetText">searchSetText</a></li><li><a href="global.html#testEnrichment">testEnrichment</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.roche.com/GP/gesel" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Global</h3><ul><li><a href="global.html#adjustFdr">adjustFdr</a></li><li><a href="global.html#computeEnrichmentCurve">computeEnrichmentCurve</a></li><li><a href="global.html#countSetOverlaps">countSetOverlaps</a></li><li><a href="global.html#effectiveNumberOfGenes">effectiveNumberOfGenes</a></li><li><a href="global.html#fetchAllCollections">fetchAllCollections</a></li><li><a href="global.html#fetchAllGenes">fetchAllGenes</a></li><li><a href="global.html#fetchAllSets">fetchAllSets</a></li><li><a href="global.html#fetchCollectionSizes">fetchCollectionSizes</a></li><li><a href="global.html#fetchEmbeddings">fetchEmbeddings</a></li><li><a href="global.html#fetchGenesForAllSets">fetchGenesForAllSets</a></li><li><a href="global.html#fetchGenesForSet">fetchGenesForSet</a></li><li><a href="global.html#fetchSetSizes">fetchSetSizes</a></li><li><a href="global.html#fetchSetsForAllGenes">fetchSetsForAllGenes</a></li><li><a href="global.html#fetchSetsForGene">fetchSetsForGene</a></li><li><a href="global.html#fetchSingleCollection">fetchSingleCollection</a></li><li><a href="global.html#fetchSingleSet">fetchSingleSet</a></li><li><a href="global.html#findOverlappingSets">findOverlappingSets</a></li><li><a href="global.html#geneBaseUrl">geneBaseUrl</a></li><li><a href="global.html#geneDownload">geneDownload</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#mapGenesByIdentifier">mapGenesByIdentifier</a></li><li><a href="global.html#numberOfCollections">numberOfCollections</a></li><li><a href="global.html#numberOfSets">numberOfSets</a></li><li><a href="global.html#preloadSearchSetText">preloadSearchSetText</a></li><li><a href="global.html#referenceBaseUrl">referenceBaseUrl</a></li><li><a href="global.html#referenceDownload">referenceDownload</a></li><li><a href="global.html#reindexGenesForAllSets">reindexGenesForAllSets</a></li><li><a href="global.html#reindexSetsForAllGenes">reindexSetsForAllGenes</a></li><li><a href="global.html#searchGenes">searchGenes</a></li><li><a href="global.html#searchSetText">searchSetText</a></li><li><a href="global.html#testEnrichment">testEnrichment</a></li></ul>
     
 </nav>
 
@@ -47,9 +47,7 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import * as pako from "pako";
-
-export var default_download = (base, file, start, end) => {
+            <pre class="prettyprint source linenums"><code>export var default_download = (base, file, start, end) => {
     let url = base + "/" + file;
     if (start == null || end == null) {
         return fetch(url);
@@ -167,11 +165,13 @@ export function setGeneDownload(fun) {
     return geneDownload(fun);
 }
 
-export function decompressLines(buffer) {
-    var contents = pako.inflate(new Uint8Array(buffer));
+export async function decompressLines(buffer) {
+    const gunzip = new DecompressionStream("gzip");
+    const gzstr = new Blob([buffer]).stream().pipeThrough(gunzip);
+    const contents = await new Response(gzstr).arrayBuffer();
+
     const txt = new TextDecoder();
     var lines = txt.decode(contents).split("\n");
-
     if (lines[lines.length - 1] == "") {
         return lines.slice(0, lines.length - 1); // remove empty string at trailing newline.
     } else {
@@ -186,7 +186,7 @@ export async function retrieveRanges(resource) {
     }
 
     var buffer = await res.arrayBuffer();
-    var lengths = decompressLines(buffer);
+    var lengths = await decompressLines(buffer);
 
     var ranges = [0];
     for (var i = 0; i &lt; lengths.length; i++) { 
@@ -202,7 +202,7 @@ export async function retrieveNamedRanges(resource) {
     }
 
     var buffer = await res.arrayBuffer();
-    var lines = decompressLines(buffer);
+    var lines = await decompressLines(buffer);
 
     var last = 0;
     var ranges = new Map; 
@@ -225,7 +225,7 @@ export async function retrieveRangesWithExtras(resource) {
     }
 
     var buffer = await res.arrayBuffer();
-    var lines = decompressLines(buffer);
+    var lines = await decompressLines(buffer);
 
     var ranges = [0];
     var extra = [];
@@ -355,7 +355,7 @@ export function fetchNumber(species, _sizes, full, initialize) {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Thu Nov 07 2024 07:55:46 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Apr 22 2026 02:13:39 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
