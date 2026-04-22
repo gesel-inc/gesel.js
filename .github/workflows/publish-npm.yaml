@@ -12,11 +12,11 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
     - name: Checkout the repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
 
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v5
       with:
-        node-version: 16
+        node-version: latest
         registry-url: 'https://registry.npmjs.org'
 
     # We only run the remaining (remote-touching) steps if the version has actually changed.
@@ -38,7 +38,7 @@ jobs:
 
     - name: Tagging the release
       if: env.UPDATE_GESEL == 1
-      uses: actions/github-script@v5
+      uses: actions/github-script@v9
       with:
         script: |
           github.rest.git.createRef({
@@ -46,4 +46,4 @@ jobs:
             repo: context.repo.repo,
             ref: 'refs/tags/' + process.env.NEW_GESEL_VERSION,
             sha: context.sha
-          })        
+          })
