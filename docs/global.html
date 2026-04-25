@@ -31,7 +31,7 @@
     <input type="text" id="nav-search" placeholder="Search" />
     
     
-    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.roche.com/GP/gesel" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Global</h3><ul><li><a href="global.html#adjustFdr">adjustFdr</a></li><li><a href="global.html#computeEnrichmentCurve">computeEnrichmentCurve</a></li><li><a href="global.html#countSetOverlaps">countSetOverlaps</a></li><li><a href="global.html#effectiveNumberOfGenes">effectiveNumberOfGenes</a></li><li><a href="global.html#fetchAllCollections">fetchAllCollections</a></li><li><a href="global.html#fetchAllGenes">fetchAllGenes</a></li><li><a href="global.html#fetchAllSets">fetchAllSets</a></li><li><a href="global.html#fetchCollectionSizes">fetchCollectionSizes</a></li><li><a href="global.html#fetchGenesForAllSets">fetchGenesForAllSets</a></li><li><a href="global.html#fetchGenesForSomeSets">fetchGenesForSomeSets</a></li><li><a href="global.html#fetchSetSizes">fetchSetSizes</a></li><li><a href="global.html#fetchSetsForAllGenes">fetchSetsForAllGenes</a></li><li><a href="global.html#fetchSetsForSomeGenes">fetchSetsForSomeGenes</a></li><li><a href="global.html#fetchSomeCollections">fetchSomeCollections</a></li><li><a href="global.html#fetchSomeSets">fetchSomeSets</a></li><li><a href="global.html#findOverlappingSets">findOverlappingSets</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#mapGenesByIdentifier">mapGenesByIdentifier</a></li><li><a href="global.html#newConfig">newConfig</a></li><li><a href="global.html#numberOfCollections">numberOfCollections</a></li><li><a href="global.html#numberOfSets">numberOfSets</a></li><li><a href="global.html#reindexGenesForAllSets">reindexGenesForAllSets</a></li><li><a href="global.html#reindexSetsForAllGenes">reindexSetsForAllGenes</a></li><li><a href="global.html#searchGenes">searchGenes</a></li><li><a href="global.html#searchSetText">searchSetText</a></li><li><a href="global.html#testEnrichment">testEnrichment</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.roche.com/GP/gesel" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Global</h3><ul><li><a href="global.html#adjustFdr">adjustFdr</a></li><li><a href="global.html#computeEnrichmentCurve">computeEnrichmentCurve</a></li><li><a href="global.html#countSetOverlaps">countSetOverlaps</a></li><li><a href="global.html#effectiveNumberOfGenes">effectiveNumberOfGenes</a></li><li><a href="global.html#fetchAllCollections">fetchAllCollections</a></li><li><a href="global.html#fetchAllGenes">fetchAllGenes</a></li><li><a href="global.html#fetchAllSets">fetchAllSets</a></li><li><a href="global.html#fetchCollectionSizes">fetchCollectionSizes</a></li><li><a href="global.html#fetchGenesForAllSets">fetchGenesForAllSets</a></li><li><a href="global.html#fetchGenesForSomeSets">fetchGenesForSomeSets</a></li><li><a href="global.html#fetchSetSizes">fetchSetSizes</a></li><li><a href="global.html#fetchSetsForAllGenes">fetchSetsForAllGenes</a></li><li><a href="global.html#fetchSetsForSomeGenes">fetchSetsForSomeGenes</a></li><li><a href="global.html#fetchSomeCollections">fetchSomeCollections</a></li><li><a href="global.html#fetchSomeSets">fetchSomeSets</a></li><li><a href="global.html#findOverlappingSets">findOverlappingSets</a></li><li><a href="global.html#flushMemoryCache">flushMemoryCache</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#mapGenesByIdentifier">mapGenesByIdentifier</a></li><li><a href="global.html#newConfig">newConfig</a></li><li><a href="global.html#numberOfCollections">numberOfCollections</a></li><li><a href="global.html#numberOfSets">numberOfSets</a></li><li><a href="global.html#reindexGenesForAllSets">reindexGenesForAllSets</a></li><li><a href="global.html#reindexSetsForAllGenes">reindexSetsForAllGenes</a></li><li><a href="global.html#searchGenes">searchGenes</a></li><li><a href="global.html#searchSetText">searchSetText</a></li><li><a href="global.html#testEnrichment">testEnrichment</a></li></ul>
     
 </nav>
 
@@ -936,11 +936,19 @@ Each object contains:</p>
 
 <dl class="details">
     
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>Count the number of genes in the Gesel database that belong to at least one set.</p>
+<p>The return value should be used as the total number of balls when performing a hypergeometric test for gene set enrichment,
+instead of the length of the array returned by <a href="global.html#fetchAllGenes"><code>fetchAllGenes</code></a>.
+This ensures that uninteresting genes like pseudo-genes or predicted genes are ignored during the calculation.
+Otherwise, unknown genes would inappropriately increase the number of balls and understate the enrichment p-values.</p>
+<p>See also the documentation for <a href="global.html#fetchSetsForSomeGenes"><code>fetchSetsForSomeGenes</code></a> for some comments about caching.</p></li></ul></dd>
+    
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetchSetsForSomeGenes.js.html">fetchSetsForSomeGenes.js</a>, <a href="fetchSetsForSomeGenes.js.html#line37">line 37</a>
+        <a href="fetchSetsForSomeGenes.js.html">fetchSetsForSomeGenes.js</a>, <a href="fetchSetsForSomeGenes.js.html#line46">line 46</a>
     </li></ul></dd>
     
 
@@ -1107,7 +1115,7 @@ This can be used as a more appropriate universe size in <a href="global.html#tes
 
     
 
-    <h4 class="name" id="fetchAllCollections"><span class="type-signature type-signature-async">(async) </span>fetchAllCollections<span class="signature">(species, config)</span><span class="type-signature"> &rarr; (nullable) {Array}</span></h4>
+    <h4 class="name" id="fetchAllCollections"><span class="type-signature type-signature-async">(async) </span>fetchAllCollections<span class="signature">(species, config)</span><span class="type-signature"> &rarr; {Array}</span></h4>
 
     
 
@@ -1116,11 +1124,16 @@ This can be used as a more appropriate universe size in <a href="global.html#tes
 
 <dl class="details">
     
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>Fetch information about all gene set collections in the Gesel database.</p>
+<p>If this function is called once, the data frame will be cached in memory and re-used in subsequent calls to this function.
+The cached data will also be used to speed up calls to <a href="global.html#fetchSomeCollections"><code>fetchSomeCollections</code></a>.</p></li></ul></dd>
+    
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetchAllCollections.js.html">fetchAllCollections.js</a>, <a href="fetchAllCollections.js.html#line24">line 24</a>
+        <a href="fetchAllCollections.js.html">fetchAllCollections.js</a>, <a href="fetchAllCollections.js.html#line29">line 29</a>
     </li></ul></dd>
     
 
@@ -1259,7 +1272,7 @@ This can be used as a more appropriate universe size in <a href="global.html#tes
 
         
 <div class="param-desc">
-    <p>Array of objects where each entry corresponds to a set collection and contains details about that collection.
+    <p>Array of objects where each entry corresponds to a gene set collection and contains details about that collection.
 Each object can be expected to contain:</p>
 <ul>
 <li><code>title</code>, the title for the collection.</li>
@@ -1632,11 +1645,16 @@ Each value is an array where each element corresponds to a gene and is itself an
 
 <dl class="details">
     
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>Fetch information about all gene sets in the Gesel database.</p>
+<p>If this function is called once, the data frame will be cached in memory and re-used in subsequent calls to this function.
+The cached data will also be used to speed up calls to <a href="global.html#fetchSomeSets"><code>fetchSomeSets</code></a>.</p></li></ul></dd>
+    
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetchAllSets.js.html">fetchAllSets.js</a>, <a href="fetchAllSets.js.html#line21">line 21</a>
+        <a href="fetchAllSets.js.html">fetchAllSets.js</a>, <a href="fetchAllSets.js.html#line26">line 26</a>
     </li></ul></dd>
     
 
@@ -1820,11 +1838,14 @@ Each object can be expected to contain:</p>
 
 <dl class="details">
     
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>Get the size of each gene set collection.</p></li></ul></dd>
+    
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetchSomeCollections.js.html">fetchSomeCollections.js</a>, <a href="fetchSomeCollections.js.html#line46">line 46</a>
+        <a href="fetchSomeCollections.js.html">fetchSomeCollections.js</a>, <a href="fetchSomeCollections.js.html#line48">line 48</a>
     </li></ul></dd>
     
 
@@ -1991,7 +2012,7 @@ Each value corresponds to a collection in <a href="global.html#fetchAllCollectio
 
     
 
-    <h4 class="name" id="fetchGenesForAllSets"><span class="type-signature type-signature-async">(async) </span>fetchGenesForAllSets<span class="signature">(species, config)</span><span class="type-signature"> &rarr; (nullable) {Array}</span></h4>
+    <h4 class="name" id="fetchGenesForAllSets"><span class="type-signature type-signature-async">(async) </span>fetchGenesForAllSets<span class="signature">(species, config)</span><span class="type-signature"> &rarr; {Array}</span></h4>
 
     
 
@@ -2000,11 +2021,16 @@ Each value corresponds to a collection in <a href="global.html#fetchAllCollectio
 
 <dl class="details">
     
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>Fetch the gene membership of all sets in the Gesel database.</p>
+<p>If this function is called once, the returned list will be cached in memory and re-used in subsequent calls to this function.
+The cached data will also be used to speed up calls to <a href="global.html#fetchGenesForSomeSets"><code>fetchGenesForSomeSets</code></a>.</p></li></ul></dd>
+    
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetchGenesForAllSets.js.html">fetchGenesForAllSets.js</a>, <a href="fetchGenesForAllSets.js.html#line13">line 13</a>
+        <a href="fetchGenesForAllSets.js.html">fetchGenesForAllSets.js</a>, <a href="fetchGenesForAllSets.js.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -2181,11 +2207,19 @@ Gene IDs refer to indices in <a href="global.html#fetchAllGenes"><code>fetchAllG
 
 <dl class="details">
     
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>Fetch the gene membership of some sets in the Gesel database.
+This can be more efficient than <a href="global.html#fetchGenesForAllSets"><code>fetchGenesForAllSets</code></a> if only a few sets are of interest.</p>
+<p>Every time this function is called, information from the requested <code>sets</code> will be added to an in-memory cache.
+Subsequent calls to this function will re-use as many of the cached sets as possible before making new requests to the Gesel database.</p>
+<p>If <a href="global.html#fetchGenesForAllSets"><code>fetchGenesForAllSets</code></a> was previously called, its cached data will be directly used by <code>fetchGenesForSomeSets</code> to avoid performing extra requests to the database.
+If <code>sets</code> is large, it may be more efficient to call <a href="global.html#fetchGenesForAllSets"><code>fetchGenesForAllSets</code></a> to prepare the cache before calling this function.</p></li></ul></dd>
+    
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetchGenesForSomeSets.js.html">fetchGenesForSomeSets.js</a>, <a href="fetchGenesForSomeSets.js.html#line18">line 18</a>
+        <a href="fetchGenesForSomeSets.js.html">fetchGenesForSomeSets.js</a>, <a href="fetchGenesForSomeSets.js.html#line27">line 27</a>
     </li></ul></dd>
     
 
@@ -2387,11 +2421,14 @@ Gene IDs refer to indices in <a href="global.html#fetchAllGenes"><code>fetchAllG
 
 <dl class="details">
     
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>Get the size of each gene set.</p></li></ul></dd>
+    
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetchSomeSets.js.html">fetchSomeSets.js</a>, <a href="fetchSomeSets.js.html#line63">line 63</a>
+        <a href="fetchSomeSets.js.html">fetchSomeSets.js</a>, <a href="fetchSomeSets.js.html#line65">line 65</a>
     </li></ul></dd>
     
 
@@ -2558,7 +2595,7 @@ Each value corresponds to a set in <a href="global.html#fetchAllSets"><code>fetc
 
     
 
-    <h4 class="name" id="fetchSetsForAllGenes"><span class="type-signature type-signature-async">(async) </span>fetchSetsForAllGenes<span class="signature">(species, config)</span><span class="type-signature"> &rarr; (nullable) {Array}</span></h4>
+    <h4 class="name" id="fetchSetsForAllGenes"><span class="type-signature type-signature-async">(async) </span>fetchSetsForAllGenes<span class="signature">(species, config)</span><span class="type-signature"> &rarr; {Array}</span></h4>
 
     
 
@@ -2567,11 +2604,16 @@ Each value corresponds to a set in <a href="global.html#fetchAllSets"><code>fetc
 
 <dl class="details">
     
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>Fetch the identities of the sets that contain each gene in the Gesel database.</p>
+<p>If this function is called once, the returned list will be cached in memory and re-used in subsequent calls to this function.
+The cached data will also be used to speed up calls to <a href="global.html#fetchSetsForSomeGenes"><code>fetchSetsForSomeGenes</code></a>.</p></li></ul></dd>
+    
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetchSetsForAllGenes.js.html">fetchSetsForAllGenes.js</a>, <a href="fetchSetsForAllGenes.js.html#line15">line 15</a>
+        <a href="fetchSetsForAllGenes.js.html">fetchSetsForAllGenes.js</a>, <a href="fetchSetsForAllGenes.js.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -2748,11 +2790,19 @@ Set IDs refer to indices in <a href="global.html#fetchAllSets"><code>fetchAllSet
 
 <dl class="details">
     
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>Fetch the identities of sets that contain some genes in the Gesel database.
+This can be more efficient than <a href="global.html#fetchSetsForAllGenes"><code>fetchSetsForAllGenes</code></a> if only a few genes are of interest.</p>
+<p>Every time this function is called, information from the requested <code>genes</code> will be added to an in-memory cache.
+Subsequent calls to this function will re-use as many of the cached genes as possible before making new requests to the Gesel database.</p>
+<p>If <a href="global.html#fetchSetsForAllGenes"><code>fetchSetsForAllGenes</code></a> is called, its cached data will be directly used by <code>fetchSetsForSomeGenes</code> to avoid extra requests to the database.
+If <code>genes</code> is large, it may be more efficient to call <a href="global.html#fetchSetsForAllGenes"><code>fetchSetsForAllGenes</code></a> to prepare the cache before calling this function.</p></li></ul></dd>
+    
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetchSetsForSomeGenes.js.html">fetchSetsForSomeGenes.js</a>, <a href="fetchSetsForSomeGenes.js.html#line70">line 70</a>
+        <a href="fetchSetsForSomeGenes.js.html">fetchSetsForSomeGenes.js</a>, <a href="fetchSetsForSomeGenes.js.html#line88">line 88</a>
     </li></ul></dd>
     
 
@@ -2954,11 +3004,19 @@ Set IDs refer to indices in <a href="global.html#fetchAllSets"><code>fetchAllSet
 
 <dl class="details">
     
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>Fetch the details of some gene set collections from the Gesel database.
+This can be more efficient than <a href="global.html#fetchAllCollections"><code>fetchAllCollections</code></a> when only a few collections are of interest.</p>
+<p>Every time this function is called, information from the requested <code>collections</code> will be added to an in-memory cache.
+Subsequent calls to this function will re-use as many of the cached collections as possible before making new requests to the Gesel database.</p>
+<p>If <a href="global.html#fetchAllCollections"><code>fetchAllCollections</code></a> was previously called, its cached data will be used by <code>fetchSomeCollections</code> to avoid extra requests to the database.
+If <code>collections</code> is large, it may be more efficient to call <a href="global.html#fetchAllCollections"><code>fetchAllCollections</code></a> to prepare the cache before calling this function.</p></li></ul></dd>
+    
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetchSomeCollections.js.html">fetchSomeCollections.js</a>, <a href="fetchSomeCollections.js.html#line87">line 87</a>
+        <a href="fetchSomeCollections.js.html">fetchSomeCollections.js</a>, <a href="fetchSomeCollections.js.html#line100">line 100</a>
     </li></ul></dd>
     
 
@@ -3159,11 +3217,19 @@ Each entry is an object containing details about the corresponding collection in
 
 <dl class="details">
     
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>Fetch the details of some gene sets from the Gesel database.
+This can be more efficient than calling <a href="global.html#fetchAllSets"><code>fetchAllSets</code></a> when only a few sets are of interest.</p>
+<p>Every time this function is called, information from the requested <code>sets</code> will be added to an in-memory cache.
+Subsequent calls to this function will re-use as many of the cached sets as possible before making new requests to the Gesel database.</p>
+<p>If <a href="global.html#fetchAllSets"><code>fetchAllSets</code></a> was previously called, its cached data will be directly used by <code>fetchSomeSets</code> to avoid performing extra requests to the database.
+If <code>sets</code> is large, it may be more efficient to call <a href="global.html#fetchAllSets"><code>fetchAllSets</code></a> to prepare the cache before calling this function.</p></li></ul></dd>
+    
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetchSomeSets.js.html">fetchSomeSets.js</a>, <a href="fetchSomeSets.js.html#line104">line 104</a>
+        <a href="fetchSomeSets.js.html">fetchSomeSets.js</a>, <a href="fetchSomeSets.js.html#line117">line 117</a>
     </li></ul></dd>
     
 
@@ -3758,6 +3824,140 @@ Only included if <code>testEnrichment = true</code>.</li>
 
     
 
+    <h4 class="name" id="flushMemoryCache"><span class="type-signature"></span>flushMemoryCache<span class="signature">(config)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="newConfig.js.html">newConfig.js</a>, <a href="newConfig.js.html#line45">line 45</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5 class="h5-parameters">Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>config</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Configuration object, see <a href="global.html#newConfig"><code>newConfig</code></a>.</p>
+<p>Flush all cached objects in <code>config</code>.
+This can be occasionally useful if the cache becomes too large.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
     <h4 class="name" id="intersect"><span class="type-signature"></span>intersect<span class="signature">(arrays)</span><span class="type-signature"> &rarr; {Array}</span></h4>
 
     
@@ -4281,7 +4481,7 @@ Each array contains the <strong>gesel</strong> gene IDs associated with the <cod
 This can be used in each <strong>gesel</strong> function to point to a different Gesel database from the default.</p>
 <p>The configuration object also contains a cache of data structures that can be populated by <strong>gesel</strong> functions.
 This avoids unnecessary fetch requests upon repeated calls to the same function.
-If the cache becomes stale or too large, it can be cleared by calling <code>flushMemoryCache</code>.</p></li></ul></dd>
+If the cache becomes stale or too large, it can be cleared by calling <a href="global.html#flushMemoryCache"><code>flushMemoryCache</code></a>.</p></li></ul></dd>
     
 
     
@@ -4648,11 +4848,14 @@ Larger block sizes will reduce the number of requests at the cost of larger requ
 
 <dl class="details">
     
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>Get the total number of gene set collections.</p></li></ul></dd>
+    
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetchSomeCollections.js.html">fetchSomeCollections.js</a>, <a href="fetchSomeCollections.js.html#line66">line 66</a>
+        <a href="fetchSomeCollections.js.html">fetchSomeCollections.js</a>, <a href="fetchSomeCollections.js.html#line70">line 70</a>
     </li></ul></dd>
     
 
@@ -4827,11 +5030,14 @@ Larger block sizes will reduce the number of requests at the cost of larger requ
 
 <dl class="details">
     
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>Get the total number of gene sets.</p></li></ul></dd>
+    
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetchSomeSets.js.html">fetchSomeSets.js</a>, <a href="fetchSomeSets.js.html#line83">line 83</a>
+        <a href="fetchSomeSets.js.html">fetchSomeSets.js</a>, <a href="fetchSomeSets.js.html#line87">line 87</a>
     </li></ul></dd>
     
 
@@ -6419,7 +6625,7 @@ This may be NaN if the inputs are inconsistent, e.g., <code>overlap</code> is gr
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sat Apr 25 2026 11:42:24 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sat Apr 25 2026 12:17:39 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

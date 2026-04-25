@@ -31,7 +31,7 @@
     <input type="text" id="nav-search" placeholder="Search" />
     
     
-    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.roche.com/GP/gesel" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Global</h3><ul><li><a href="global.html#adjustFdr">adjustFdr</a></li><li><a href="global.html#computeEnrichmentCurve">computeEnrichmentCurve</a></li><li><a href="global.html#countSetOverlaps">countSetOverlaps</a></li><li><a href="global.html#effectiveNumberOfGenes">effectiveNumberOfGenes</a></li><li><a href="global.html#fetchAllCollections">fetchAllCollections</a></li><li><a href="global.html#fetchAllGenes">fetchAllGenes</a></li><li><a href="global.html#fetchAllSets">fetchAllSets</a></li><li><a href="global.html#fetchCollectionSizes">fetchCollectionSizes</a></li><li><a href="global.html#fetchGenesForAllSets">fetchGenesForAllSets</a></li><li><a href="global.html#fetchGenesForSomeSets">fetchGenesForSomeSets</a></li><li><a href="global.html#fetchSetSizes">fetchSetSizes</a></li><li><a href="global.html#fetchSetsForAllGenes">fetchSetsForAllGenes</a></li><li><a href="global.html#fetchSetsForSomeGenes">fetchSetsForSomeGenes</a></li><li><a href="global.html#fetchSomeCollections">fetchSomeCollections</a></li><li><a href="global.html#fetchSomeSets">fetchSomeSets</a></li><li><a href="global.html#findOverlappingSets">findOverlappingSets</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#mapGenesByIdentifier">mapGenesByIdentifier</a></li><li><a href="global.html#newConfig">newConfig</a></li><li><a href="global.html#numberOfCollections">numberOfCollections</a></li><li><a href="global.html#numberOfSets">numberOfSets</a></li><li><a href="global.html#reindexGenesForAllSets">reindexGenesForAllSets</a></li><li><a href="global.html#reindexSetsForAllGenes">reindexSetsForAllGenes</a></li><li><a href="global.html#searchGenes">searchGenes</a></li><li><a href="global.html#searchSetText">searchSetText</a></li><li><a href="global.html#testEnrichment">testEnrichment</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.roche.com/GP/gesel" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Global</h3><ul><li><a href="global.html#adjustFdr">adjustFdr</a></li><li><a href="global.html#computeEnrichmentCurve">computeEnrichmentCurve</a></li><li><a href="global.html#countSetOverlaps">countSetOverlaps</a></li><li><a href="global.html#effectiveNumberOfGenes">effectiveNumberOfGenes</a></li><li><a href="global.html#fetchAllCollections">fetchAllCollections</a></li><li><a href="global.html#fetchAllGenes">fetchAllGenes</a></li><li><a href="global.html#fetchAllSets">fetchAllSets</a></li><li><a href="global.html#fetchCollectionSizes">fetchCollectionSizes</a></li><li><a href="global.html#fetchGenesForAllSets">fetchGenesForAllSets</a></li><li><a href="global.html#fetchGenesForSomeSets">fetchGenesForSomeSets</a></li><li><a href="global.html#fetchSetSizes">fetchSetSizes</a></li><li><a href="global.html#fetchSetsForAllGenes">fetchSetsForAllGenes</a></li><li><a href="global.html#fetchSetsForSomeGenes">fetchSetsForSomeGenes</a></li><li><a href="global.html#fetchSomeCollections">fetchSomeCollections</a></li><li><a href="global.html#fetchSomeSets">fetchSomeSets</a></li><li><a href="global.html#findOverlappingSets">findOverlappingSets</a></li><li><a href="global.html#flushMemoryCache">flushMemoryCache</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#mapGenesByIdentifier">mapGenesByIdentifier</a></li><li><a href="global.html#newConfig">newConfig</a></li><li><a href="global.html#numberOfCollections">numberOfCollections</a></li><li><a href="global.html#numberOfSets">numberOfSets</a></li><li><a href="global.html#reindexGenesForAllSets">reindexGenesForAllSets</a></li><li><a href="global.html#reindexSetsForAllGenes">reindexSetsForAllGenes</a></li><li><a href="global.html#searchGenes">searchGenes</a></li><li><a href="global.html#searchSetText">searchSetText</a></li><li><a href="global.html#testEnrichment">testEnrichment</a></li></ul>
     
 </nav>
 
@@ -49,13 +49,16 @@
         <article>
             <pre class="prettyprint source linenums"><code>import * as utils from "./utils.js";
 
-const _cache = new Map;
-
 /**
+ * Fetch the identities of the sets that contain each gene in the Gesel database.
+ *
+ * If this function is called once, the returned list will be cached in memory and re-used in subsequent calls to this function.
+ * The cached data will also be used to speed up calls to {@linkcode fetchSetsForSomeGenes}.
+ *
  * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
  * @param {object} config - Configuration object, see {@linkcode newConfig}.
  *
- * @return {?Array} Array of length equal to the total number of genes for this `species`.
+ * @return {Array} Array of length equal to the total number of genes for this `species`.
  * Each element corresponds to an entry in {@linkcode fetchAllGenes} and is a Uint32Array containing the IDs for all sets containing that gene.
  * Set IDs refer to indices in {@linkcode fetchAllSets}.
  *
@@ -95,7 +98,7 @@ export async function fetchSetsForAllGenes(species, config) {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sat Apr 25 2026 11:42:24 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sat Apr 25 2026 12:17:39 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

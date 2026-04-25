@@ -31,7 +31,7 @@
     <input type="text" id="nav-search" placeholder="Search" />
     
     
-    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.roche.com/GP/gesel" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Global</h3><ul><li><a href="global.html#adjustFdr">adjustFdr</a></li><li><a href="global.html#computeEnrichmentCurve">computeEnrichmentCurve</a></li><li><a href="global.html#countSetOverlaps">countSetOverlaps</a></li><li><a href="global.html#effectiveNumberOfGenes">effectiveNumberOfGenes</a></li><li><a href="global.html#fetchAllCollections">fetchAllCollections</a></li><li><a href="global.html#fetchAllGenes">fetchAllGenes</a></li><li><a href="global.html#fetchAllSets">fetchAllSets</a></li><li><a href="global.html#fetchCollectionSizes">fetchCollectionSizes</a></li><li><a href="global.html#fetchGenesForAllSets">fetchGenesForAllSets</a></li><li><a href="global.html#fetchGenesForSomeSets">fetchGenesForSomeSets</a></li><li><a href="global.html#fetchSetSizes">fetchSetSizes</a></li><li><a href="global.html#fetchSetsForAllGenes">fetchSetsForAllGenes</a></li><li><a href="global.html#fetchSetsForSomeGenes">fetchSetsForSomeGenes</a></li><li><a href="global.html#fetchSomeCollections">fetchSomeCollections</a></li><li><a href="global.html#fetchSomeSets">fetchSomeSets</a></li><li><a href="global.html#findOverlappingSets">findOverlappingSets</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#mapGenesByIdentifier">mapGenesByIdentifier</a></li><li><a href="global.html#newConfig">newConfig</a></li><li><a href="global.html#numberOfCollections">numberOfCollections</a></li><li><a href="global.html#numberOfSets">numberOfSets</a></li><li><a href="global.html#reindexGenesForAllSets">reindexGenesForAllSets</a></li><li><a href="global.html#reindexSetsForAllGenes">reindexSetsForAllGenes</a></li><li><a href="global.html#searchGenes">searchGenes</a></li><li><a href="global.html#searchSetText">searchSetText</a></li><li><a href="global.html#testEnrichment">testEnrichment</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.roche.com/GP/gesel" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Global</h3><ul><li><a href="global.html#adjustFdr">adjustFdr</a></li><li><a href="global.html#computeEnrichmentCurve">computeEnrichmentCurve</a></li><li><a href="global.html#countSetOverlaps">countSetOverlaps</a></li><li><a href="global.html#effectiveNumberOfGenes">effectiveNumberOfGenes</a></li><li><a href="global.html#fetchAllCollections">fetchAllCollections</a></li><li><a href="global.html#fetchAllGenes">fetchAllGenes</a></li><li><a href="global.html#fetchAllSets">fetchAllSets</a></li><li><a href="global.html#fetchCollectionSizes">fetchCollectionSizes</a></li><li><a href="global.html#fetchGenesForAllSets">fetchGenesForAllSets</a></li><li><a href="global.html#fetchGenesForSomeSets">fetchGenesForSomeSets</a></li><li><a href="global.html#fetchSetSizes">fetchSetSizes</a></li><li><a href="global.html#fetchSetsForAllGenes">fetchSetsForAllGenes</a></li><li><a href="global.html#fetchSetsForSomeGenes">fetchSetsForSomeGenes</a></li><li><a href="global.html#fetchSomeCollections">fetchSomeCollections</a></li><li><a href="global.html#fetchSomeSets">fetchSomeSets</a></li><li><a href="global.html#findOverlappingSets">findOverlappingSets</a></li><li><a href="global.html#flushMemoryCache">flushMemoryCache</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#mapGenesByIdentifier">mapGenesByIdentifier</a></li><li><a href="global.html#newConfig">newConfig</a></li><li><a href="global.html#numberOfCollections">numberOfCollections</a></li><li><a href="global.html#numberOfSets">numberOfSets</a></li><li><a href="global.html#reindexGenesForAllSets">reindexGenesForAllSets</a></li><li><a href="global.html#reindexSetsForAllGenes">reindexSetsForAllGenes</a></li><li><a href="global.html#searchGenes">searchGenes</a></li><li><a href="global.html#searchSetText">searchSetText</a></li><li><a href="global.html#testEnrichment">testEnrichment</a></li></ul>
     
 </nav>
 
@@ -77,6 +77,15 @@ async function initialize(species, config) {
 }
 
 /**
+ * Count the number of genes in the Gesel database that belong to at least one set.
+ *
+ * The return value should be used as the total number of balls when performing a hypergeometric test for gene set enrichment,
+ * instead of the length of the array returned by {@linkcode fetchAllGenes}.
+ * This ensures that uninteresting genes like pseudo-genes or predicted genes are ignored during the calculation.
+ * Otherwise, unknown genes would inappropriately increase the number of balls and understate the enrichment p-values.
+ *
+ * See also the documentation for {@linkcode fetchSetsForSomeGenes} for some comments about caching. 
+ *
  * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
  * @param {object} config - Configuration object, see {@linkcode newConfig}.
  *
@@ -105,6 +114,15 @@ export async function effectiveNumberOfGenes(species, config) {
 }
 
 /**
+ * Fetch the identities of sets that contain some genes in the Gesel database.
+ * This can be more efficient than {@linkcode fetchSetsForAllGenes} if only a few genes are of interest.
+ *
+ * Every time this function is called, information from the requested `genes` will be added to an in-memory cache.
+ * Subsequent calls to this function will re-use as many of the cached genes as possible before making new requests to the Gesel database.
+ *
+ * If {@linkcode fetchSetsForAllGenes} is called, its cached data will be directly used by `fetchSetsForSomeGenes` to avoid extra requests to the database.
+ * If `genes` is large, it may be more efficient to call {@linkcode fetchSetsForAllGenes} to prepare the cache before calling this function.
+ *
  * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
  * @param {Array} genes - Array of gene IDs.
  * Each ID is a row index in any of the arrays returned by {@linkcode fetchAllGenes}.
@@ -163,7 +181,7 @@ export async function fetchSetsForSomeGenes(species, genes, config) {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sat Apr 25 2026 11:42:24 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sat Apr 25 2026 12:17:39 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
