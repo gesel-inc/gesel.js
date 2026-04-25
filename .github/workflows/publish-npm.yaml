@@ -8,7 +8,7 @@ name: Publish to NPM
 
 permissions:
   id-token: write  # Required for OIDC
-  contents: read
+  contents: write 
 
 jobs:
   build:
