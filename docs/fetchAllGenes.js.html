@@ -31,7 +31,7 @@
     <input type="text" id="nav-search" placeholder="Search" />
     
     
-    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.roche.com/GP/gesel" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Global</h3><ul><li><a href="global.html#adjustFdr">adjustFdr</a></li><li><a href="global.html#computeEnrichmentCurve">computeEnrichmentCurve</a></li><li><a href="global.html#countSetOverlaps">countSetOverlaps</a></li><li><a href="global.html#effectiveNumberOfGenes">effectiveNumberOfGenes</a></li><li><a href="global.html#fetchAllCollections">fetchAllCollections</a></li><li><a href="global.html#fetchAllGenes">fetchAllGenes</a></li><li><a href="global.html#fetchAllSets">fetchAllSets</a></li><li><a href="global.html#fetchCollectionSizes">fetchCollectionSizes</a></li><li><a href="global.html#fetchEmbeddings">fetchEmbeddings</a></li><li><a href="global.html#fetchGenesForAllSets">fetchGenesForAllSets</a></li><li><a href="global.html#fetchGenesForSet">fetchGenesForSet</a></li><li><a href="global.html#fetchSetSizes">fetchSetSizes</a></li><li><a href="global.html#fetchSetsForAllGenes">fetchSetsForAllGenes</a></li><li><a href="global.html#fetchSetsForGene">fetchSetsForGene</a></li><li><a href="global.html#fetchSingleCollection">fetchSingleCollection</a></li><li><a href="global.html#fetchSingleSet">fetchSingleSet</a></li><li><a href="global.html#findOverlappingSets">findOverlappingSets</a></li><li><a href="global.html#geneBaseUrl">geneBaseUrl</a></li><li><a href="global.html#geneDownload">geneDownload</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#mapGenesByIdentifier">mapGenesByIdentifier</a></li><li><a href="global.html#numberOfCollections">numberOfCollections</a></li><li><a href="global.html#numberOfSets">numberOfSets</a></li><li><a href="global.html#preloadSearchSetText">preloadSearchSetText</a></li><li><a href="global.html#referenceBaseUrl">referenceBaseUrl</a></li><li><a href="global.html#referenceDownload">referenceDownload</a></li><li><a href="global.html#reindexGenesForAllSets">reindexGenesForAllSets</a></li><li><a href="global.html#reindexSetsForAllGenes">reindexSetsForAllGenes</a></li><li><a href="global.html#searchGenes">searchGenes</a></li><li><a href="global.html#searchSetText">searchSetText</a></li><li><a href="global.html#testEnrichment">testEnrichment</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.roche.com/GP/gesel" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Global</h3><ul><li><a href="global.html#adjustFdr">adjustFdr</a></li><li><a href="global.html#computeEnrichmentCurve">computeEnrichmentCurve</a></li><li><a href="global.html#countSetOverlaps">countSetOverlaps</a></li><li><a href="global.html#effectiveNumberOfGenes">effectiveNumberOfGenes</a></li><li><a href="global.html#fetchAllCollections">fetchAllCollections</a></li><li><a href="global.html#fetchAllGenes">fetchAllGenes</a></li><li><a href="global.html#fetchAllSets">fetchAllSets</a></li><li><a href="global.html#fetchCollectionSizes">fetchCollectionSizes</a></li><li><a href="global.html#fetchGenesForAllSets">fetchGenesForAllSets</a></li><li><a href="global.html#fetchGenesForSomeSets">fetchGenesForSomeSets</a></li><li><a href="global.html#fetchSetSizes">fetchSetSizes</a></li><li><a href="global.html#fetchSetsForAllGenes">fetchSetsForAllGenes</a></li><li><a href="global.html#fetchSetsForSomeGenes">fetchSetsForSomeGenes</a></li><li><a href="global.html#fetchSomeCollections">fetchSomeCollections</a></li><li><a href="global.html#fetchSomeSets">fetchSomeSets</a></li><li><a href="global.html#findOverlappingSets">findOverlappingSets</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#mapGenesByIdentifier">mapGenesByIdentifier</a></li><li><a href="global.html#newConfig">newConfig</a></li><li><a href="global.html#numberOfCollections">numberOfCollections</a></li><li><a href="global.html#numberOfSets">numberOfSets</a></li><li><a href="global.html#reindexGenesForAllSets">reindexGenesForAllSets</a></li><li><a href="global.html#reindexSetsForAllGenes">reindexSetsForAllGenes</a></li><li><a href="global.html#searchGenes">searchGenes</a></li><li><a href="global.html#searchSetText">searchSetText</a></li><li><a href="global.html#testEnrichment">testEnrichment</a></li></ul>
     
 </nav>
 
@@ -47,12 +47,11 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import { gene_download, decompressLines } from "./utils.js";
-
-var _genes = new Map;
+            <pre class="prettyprint source linenums"><code>import { decompressLines } from "./utils.js";
 
 /**
  * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
+ * @param {object} config - Configuration object, see {@linkcode newConfig}.
  * @param {object} [options={}] - Optional parameters.
  * @param {?Array} [options.types=null] - Array of strings specifying the identifier types to be retrieved.
  * The exact choice of strings depends on how the references were constructed.
@@ -66,26 +65,34 @@ var _genes = new Map;
  *
  * @async
  */
-export async function fetchAllGenes(species, { types = null } = {}) {
+export async function fetchAllGenes(species, config, { types = null } = {}) {
     if (types == null) {
         types = [ "symbol", "entrez", "ensembl" ];
     }
 
-    let target = _genes.get(species);
+    let cache;
+    if ("fetchAllGenes" in config.cache) {
+        cache = config.cache.fetchAllGenes;
+    } else {
+        cache = new Map;
+        config.cache.fetchAllGenes = cache;
+    }
+
+    let target = cache.get(species);
     if (typeof target == "undefined") {
         target = new Map;
-        _genes.set(species, target);
+        cache.set(species, target);
     }
 
     let output = new Map;
     let promises = [];
-    let processing = [];
+    let processed_types = [];
 
     for (const t of types) {
         let found = target.get(t);
         if (typeof found == "undefined") {
-            promises.push(gene_download(species + "_" + t + ".tsv.gz"));
-            processing.push(t);
+            promises.push(config.fetchGene(species + "_" + t + ".tsv.gz"));
+            processed_types.push(t);
         } else {
             output.set(t, found);
         }
@@ -94,13 +101,7 @@ export async function fetchAllGenes(species, { types = null } = {}) {
     if (promises.length > 0) {
         let resolved = await Promise.all(promises);
         for (var i = 0; i &lt; resolved.length; i++) {
-            let res = resolved[i];
-            if (!res.ok) {
-                throw "failed to fetch symbol information for genes";
-            }
-            var buffer = await res.arrayBuffer();
-
-            let gene_data = await decompressLines(buffer);
+            let gene_data = await decompressLines(resolved[i]);
             let processed = [];
             for (const x of gene_data) {
                 if (x == "") {
@@ -110,7 +111,7 @@ export async function fetchAllGenes(species, { types = null } = {}) {
                 }
             }
 
-            let t = processing[i];
+            let t = processed_types[i];
             target.set(t, processed);
             output.set(t, processed);
         }
@@ -132,7 +133,7 @@ export async function fetchAllGenes(species, { types = null } = {}) {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Apr 22 2026 02:16:45 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sat Apr 25 2026 06:49:17 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

@@ -31,7 +31,7 @@
     <input type="text" id="nav-search" placeholder="Search" />
     
     
-    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.roche.com/GP/gesel" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Global</h3><ul><li><a href="global.html#adjustFdr">adjustFdr</a></li><li><a href="global.html#computeEnrichmentCurve">computeEnrichmentCurve</a></li><li><a href="global.html#countSetOverlaps">countSetOverlaps</a></li><li><a href="global.html#effectiveNumberOfGenes">effectiveNumberOfGenes</a></li><li><a href="global.html#fetchAllCollections">fetchAllCollections</a></li><li><a href="global.html#fetchAllGenes">fetchAllGenes</a></li><li><a href="global.html#fetchAllSets">fetchAllSets</a></li><li><a href="global.html#fetchCollectionSizes">fetchCollectionSizes</a></li><li><a href="global.html#fetchEmbeddings">fetchEmbeddings</a></li><li><a href="global.html#fetchGenesForAllSets">fetchGenesForAllSets</a></li><li><a href="global.html#fetchGenesForSet">fetchGenesForSet</a></li><li><a href="global.html#fetchSetSizes">fetchSetSizes</a></li><li><a href="global.html#fetchSetsForAllGenes">fetchSetsForAllGenes</a></li><li><a href="global.html#fetchSetsForGene">fetchSetsForGene</a></li><li><a href="global.html#fetchSingleCollection">fetchSingleCollection</a></li><li><a href="global.html#fetchSingleSet">fetchSingleSet</a></li><li><a href="global.html#findOverlappingSets">findOverlappingSets</a></li><li><a href="global.html#geneBaseUrl">geneBaseUrl</a></li><li><a href="global.html#geneDownload">geneDownload</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#mapGenesByIdentifier">mapGenesByIdentifier</a></li><li><a href="global.html#numberOfCollections">numberOfCollections</a></li><li><a href="global.html#numberOfSets">numberOfSets</a></li><li><a href="global.html#preloadSearchSetText">preloadSearchSetText</a></li><li><a href="global.html#referenceBaseUrl">referenceBaseUrl</a></li><li><a href="global.html#referenceDownload">referenceDownload</a></li><li><a href="global.html#reindexGenesForAllSets">reindexGenesForAllSets</a></li><li><a href="global.html#reindexSetsForAllGenes">reindexSetsForAllGenes</a></li><li><a href="global.html#searchGenes">searchGenes</a></li><li><a href="global.html#searchSetText">searchSetText</a></li><li><a href="global.html#testEnrichment">testEnrichment</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.roche.com/GP/gesel" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Global</h3><ul><li><a href="global.html#adjustFdr">adjustFdr</a></li><li><a href="global.html#computeEnrichmentCurve">computeEnrichmentCurve</a></li><li><a href="global.html#countSetOverlaps">countSetOverlaps</a></li><li><a href="global.html#effectiveNumberOfGenes">effectiveNumberOfGenes</a></li><li><a href="global.html#fetchAllCollections">fetchAllCollections</a></li><li><a href="global.html#fetchAllGenes">fetchAllGenes</a></li><li><a href="global.html#fetchAllSets">fetchAllSets</a></li><li><a href="global.html#fetchCollectionSizes">fetchCollectionSizes</a></li><li><a href="global.html#fetchGenesForAllSets">fetchGenesForAllSets</a></li><li><a href="global.html#fetchGenesForSomeSets">fetchGenesForSomeSets</a></li><li><a href="global.html#fetchSetSizes">fetchSetSizes</a></li><li><a href="global.html#fetchSetsForAllGenes">fetchSetsForAllGenes</a></li><li><a href="global.html#fetchSetsForSomeGenes">fetchSetsForSomeGenes</a></li><li><a href="global.html#fetchSomeCollections">fetchSomeCollections</a></li><li><a href="global.html#fetchSomeSets">fetchSomeSets</a></li><li><a href="global.html#findOverlappingSets">findOverlappingSets</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#mapGenesByIdentifier">mapGenesByIdentifier</a></li><li><a href="global.html#newConfig">newConfig</a></li><li><a href="global.html#numberOfCollections">numberOfCollections</a></li><li><a href="global.html#numberOfSets">numberOfSets</a></li><li><a href="global.html#reindexGenesForAllSets">reindexGenesForAllSets</a></li><li><a href="global.html#reindexSetsForAllGenes">reindexSetsForAllGenes</a></li><li><a href="global.html#searchGenes">searchGenes</a></li><li><a href="global.html#searchSetText">searchSetText</a></li><li><a href="global.html#testEnrichment">testEnrichment</a></li></ul>
     
 </nav>
 
@@ -48,8 +48,10 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>import * as utils from "./utils.js";
+import { rangesToBlocks, consolidateRanges } from "./consolidateRanges.js";
+import { extractRanges } from "./extractRanges.js";
 
-export function binarySearch(query, vector) {
+export function binarySearchRight(query, vector) {
     let left = 0;
     let right = vector.length;
 
@@ -67,133 +69,101 @@ export function binarySearch(query, vector) {
     return left;
 }
 
-async function fetchSetsByToken(species, token, file, all_ranges, all_ordered, all_cache) {
-    let actual_file = species + "_" + file;
-
-    let cached = all_cache.get(species);
-    if (typeof cached === "undefined") {
-        const { ranges, order } = await utils.retrieveNamedRanges(actual_file);
-        all_ranges.set(species, ranges);
-        all_ordered.set(species, order);
-        cached = new Map;
-        all_cache.set(species, cached);
-    }
-
-    if (token == null) {
-        return;
-    }
-
-    let tfound = cached.get(token);
-    if (typeof tfound !== "undefined") {
-        return tfound;
-    }
-
-    let ranges = all_ranges.get(species);
-    let output;
-    if (token.includes("*") || token.includes("?")) {
-        let ordered = all_ordered.get(species);
-
-        // Wildcard handling.
-        let initstub = token.replace(/[*?].*/, "")
-        let pos = (initstub == "" ? 0 : binarySearch(initstub, ordered));
-        let regex = new RegExp(token.replace(/[*]/g, ".*").replace(/[?]/g, "."));
-
-        let collected = [];
-        let to_cache = [];
-        let union = new Set;
-
-        while (pos &lt; ordered.length) {
-            let candidate = ordered[pos];
-            if (initstub != "" &amp;&amp; !candidate.startsWith(initstub)) {
-                break;
-            }
-
-            let cfound = cached.get(candidate);
-            if (typeof cfound === "undefined") {
-                let rr = ranges.get(candidate);
-                collected.push(utils.retrieveBytes(actual_file, rr[0], rr[1]).then(utils.convertToUint32Array));
-                to_cache.push(candidate);
-            } else {
-                for (const y of cfound) {
-                    union.add(y);
-                }
-            }
-
-            pos++;
-        }
-
-        let resolved = await Promise.all(collected);
-        for (var i = 0; i &lt; resolved.length; i++) {
-            let x = resolved[i];
-            cached.set(to_cache[i], x);
-            for (const y of x) {
-                union.add(y);
-            }
-        }
-
-        output = new Uint32Array(union);
-
+async function fetchSetsByToken(species, tokens, type, config) {
+    let cache;
+    if ("fetchSetsByToken" in config.cache) {
+        cache = config.cache.fetchSetsByToken;
     } else {
-        // Direct handling.
-        let rr = ranges.get(token);
-        if (typeof rr === "undefined") {
-            return new Uint32Array;
+        cache = new Map;
+        config.cache.fetchSetsByToken = cache;
+    }
+
+    const fname = species + "_tokens-" + type + ".tsv";
+    let spfound = cache.get(species);
+    if (typeof cached === "undefined") {
+        const { ranges, order } = await utils.retrieveNamedRanges(config, fname);
+        spfound = {
+            intervals: ranges,
+            order: order,
+            blocked: rangesToBlocks(ranges, config.consolidateBlockSize),
+            prior: new Map
+        };
+        cache.set(species, spfound);
+    }
+
+    const partial_mapping = new Map;
+    const to_request = new Set;
+
+    for (const token of tokens) {
+        if (spfound.prior.has(token)) {
+            continue; 
         }
-        let text = await utils.retrieveBytes(actual_file, rr[0], rr[1]);
-        output = utils.convertToUint32Array(text);
+
+        if (token.includes("*") || token.includes("?")) {
+            // Wildcard handling.
+            let initstub = token.replace(/[*?].*/, "")
+            let pos = (initstub == "" ? 0 : binarySearchRight(initstub, spfound.order));
+            let regex = new RegExp("^" + token.replace(/[*]/g, ".*").replace(/[?]/g, ".") + "$");
+
+            let partial_idx = [];
+            while (pos &lt; spfound.order.length) {
+                let candidate = spfound.order[pos];
+                if (initstub != "" &amp;&amp; !candidate.startsWith(initstub)) {
+                    break;
+                }
+                if (candidate.match(regex)) {
+                    to_request.add(pos);
+                    partial_idx.push(pos);
+                }
+                pos++;
+            }
+
+            partial_mapping.set(token, partial_idx);
+
+        } else {
+            // Direct handling.
+            const pos = binarySearchRight(token, spfound.order);
+            if (pos &lt; spfound.order.length &amp;&amp; spfound.order[pos] == token) {
+                to_request.add(pos);
+            } else {
+                spfound.prior.set(token, []);
+            }
+        }
     }
 
-    cached.set(token, output);
+    if (to_request.size > 0) {
+        const requested_idx = Array.from(to_request);
+        const consolidated = consolidateRanges(spfound.intervals, spfound.blocked, requested_idx);
+        const consolidated_parts = await config.fetchRanges(fname, consolidated.start, consolidated.end);
+
+        extractRanges(
+            consolidated_parts,
+            consolidated.start,
+            consolidated.end,
+            spfound.intervals,
+            consolidated.requested,
+            (ii, sliced) => { spfound.prior.set(spfound.order[ii], utils.decodeIndicesFromBuffer(sliced)); }
+        );
+    }
+
+    // Populating the cache for the wildcard-containing tokens.
+    for (const [partial, concretes] of partial_mapping.entries()) {
+        let collected = new Set;
+        for (const iv of concretes) {
+            for (const m of spfound.prior.get(spfound.order[iv])) {
+                collected.add(m);
+            }
+        }
+        const collected_idx = Array.from(collected);
+        collected_idx.sort((a, b) => a - b);
+        spfound.prior.set(partial, collected_idx);
+    }
+
+    let output = [];
+    for (const tok of tokens) {
+        output.push(spfound.prior.get(tok));
+    }
     return output;
-}
-
-const n_cache = new Map;
-const n_ranges = new Map;
-const n_ordered = new Map;
-
-async function fetchSetsByNameToken(species, token) {
-    return fetchSetsByToken(species, token, "tokens-names.tsv", n_ranges, n_ordered, n_cache);
-}
-
-const d_cache = new Map;
-const d_ranges = new Map;
-const d_ordered = new Map;
-
-async function fetchSetsByDescriptionToken(species, token) {
-    return fetchSetsByToken(species, token, "tokens-descriptions.tsv", d_ranges, d_ordered, d_cache);
-}
-
-export async function preloadTokens(species, resp, ordered, cache, msg) {
-    if (!resp.ok) {
-        throw new Error("failed to fetch full set of " + msg + " tokens for species '" + species + "'");
-    }
-
-    let lines = await utils.decompressLines(await resp.arrayBuffer());
-    if (lines.length !== ordered.length) {
-        throw new Error("mismatch in lengths between token names and set indices for species '" + species + "'");
-    }
-
-    for (var i = 0; i &lt; lines.length; i++) {
-        cache.set(ordered[i], utils.convertToUint32Array(lines[i]));
-    }
-}
-
-/**
- * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
- *
- * @return Preloads the search indices for use in {@linkcode searchSetText}.
- * This performs a one-off download of the indices such that further calls to {@linkcode searchSetText} do not need to perform HTTP range requests.
- */
-export async function preloadSearchSetText(species) {
-    let full = await Promise.all([ 
-        utils.reference_download(species + "_tokens-names.tsv.gz"),
-        utils.reference_download(species + "_tokens-descriptions.tsv.gz"),
-        fetchSetsByNameToken(species, null),
-        fetchSetsByDescriptionToken(species, null)
-    ]);
-    await preloadTokens(species, full[0], n_ordered.get(species), n_cache.get(species), "name");
-    await preloadTokens(species, full[1], d_ordered.get(species), d_cache.get(species), "description");
-    return;
 }
 
 /**
@@ -207,6 +177,7 @@ export async function preloadSearchSetText(species) {
  * - `?`: match exactly one alphanumeric or dash character.
  *
  * A set's name and/or description must contain all words in `query` to be considered a match.
+ * @param {object} config - Configuration object, see {@linkcode newConfig}.
  * @param {object} [options={}] - Optional parameters.
  * @param {boolean} [options.inName=true] - Whether to search the name of the set for matching words.
  * @param {boolean} [options.inDescription=true] - Whether to search the description of the set for matching words.
@@ -214,56 +185,33 @@ export async function preloadSearchSetText(species) {
  * @return {Array} Array of indices of the sets with names and/or descriptions that match `query`.
  * @async
  */
-export async function searchSetText(species, query, { inName = true, inDescription = true } = {}) {
+export async function searchSetText(species, query, config, { inName = true, inDescription = true } = {}) {
     // Tokenizing the query using the same logic as in the feedstock repository,
     // but preserving our wildcards for special handling later.
     let processed = query.toLowerCase().replace(/[^a-zA-Z0-9-?*]/g, " ");
     let tokens = processed.split(/\s+/);
     tokens = tokens.filter(x => x !== "" || x !== "-");
-
-    let init = [];
-    if (inName) {
-        init.push(fetchSetsByNameToken(species, null));
-    }
-    if (inDescription) {
-        init.push(fetchSetsByDescriptionToken(species, null));
-    }
-    await Promise.all(init); // force initialization of all caches.
-
-    let gathered_names = [];
-    if (inName) {
-        let already_queried = new Set;
-        for (const tok of tokens) {
-            if (!already_queried.has(tok)) {
-                gathered_names.push(fetchSetsByNameToken(species, tok));
-                already_queried.add(tok);
-            }
-        }
-    }
-
-    let gathered_descriptions = [];
-    if (inDescription) {
-        let already_queried = new Set;
-        for (const tok of tokens) {
-            if (!already_queried.has(tok)) {
-                gathered_descriptions.push(fetchSetsByDescriptionToken(species, tok));
-                already_queried.add(tok);
-            }
-        }
-    }
-
-    let resolved_names = await Promise.all(gathered_names);
-    let resolved_descriptions = await Promise.all(gathered_descriptions);
+    tokens = Array.from(new Set(tokens));
 
     let gathered = [];
-    for (var i = 0; i &lt; tokens.length; i++) {
-        let n = (inName ? resolved_names[i] : []);
-        let d = (inDescription ? resolved_descriptions[i] : []);
+    if (inName &amp;&amp; inDescription) {
+        const resolved = await Promise.all([
+            fetchSetsByToken(species, tokens, "names", config),
+            fetchSetsByToken(species, tokens, "descriptions", config)
+        ]);
 
-        let combined = new Uint32Array(n.length + d.length);
-        combined.set(n);
-        combined.set(d, n.length);
-        gathered.push(combined);
+        const gathered_names = resolved[0];
+        const gathered_descriptions = resolved[1];
+        for (var t = 0; t &lt; tokens.length; t++) {
+            const combined = [...gathered_names[t], ...gathered_descriptions[t]];
+            gathered.push(Array.from(new Set(combined)));
+        }
+
+    } else if (inName) {
+        gathered = await fetchSetsByToken(species, tokens, "names", config);
+
+    } else if (inDescription) {
+        gathered = await fetchSetsByToken(species, tokens, "descriptions", config);
     }
 
     return utils.intersect(gathered);
@@ -282,7 +230,7 @@ export async function searchSetText(species, query, { inName = true, inDescripti
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Apr 22 2026 02:16:45 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sat Apr 25 2026 06:49:17 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

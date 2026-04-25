@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="utf-8">
+    <title>fetchSomeSets.js - Documentation</title>
+    
+    
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+    <script src="scripts/nav.js" defer></script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav >
+    
+    <input type="text" id="nav-search" placeholder="Search" />
+    
+    
+    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.roche.com/GP/gesel" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Global</h3><ul><li><a href="global.html#adjustFdr">adjustFdr</a></li><li><a href="global.html#computeEnrichmentCurve">computeEnrichmentCurve</a></li><li><a href="global.html#countSetOverlaps">countSetOverlaps</a></li><li><a href="global.html#effectiveNumberOfGenes">effectiveNumberOfGenes</a></li><li><a href="global.html#fetchAllCollections">fetchAllCollections</a></li><li><a href="global.html#fetchAllGenes">fetchAllGenes</a></li><li><a href="global.html#fetchAllSets">fetchAllSets</a></li><li><a href="global.html#fetchCollectionSizes">fetchCollectionSizes</a></li><li><a href="global.html#fetchGenesForAllSets">fetchGenesForAllSets</a></li><li><a href="global.html#fetchGenesForSomeSets">fetchGenesForSomeSets</a></li><li><a href="global.html#fetchSetSizes">fetchSetSizes</a></li><li><a href="global.html#fetchSetsForAllGenes">fetchSetsForAllGenes</a></li><li><a href="global.html#fetchSetsForSomeGenes">fetchSetsForSomeGenes</a></li><li><a href="global.html#fetchSomeCollections">fetchSomeCollections</a></li><li><a href="global.html#fetchSomeSets">fetchSomeSets</a></li><li><a href="global.html#findOverlappingSets">findOverlappingSets</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#mapGenesByIdentifier">mapGenesByIdentifier</a></li><li><a href="global.html#newConfig">newConfig</a></li><li><a href="global.html#numberOfCollections">numberOfCollections</a></li><li><a href="global.html#numberOfSets">numberOfSets</a></li><li><a href="global.html#reindexGenesForAllSets">reindexGenesForAllSets</a></li><li><a href="global.html#reindexSetsForAllGenes">reindexSetsForAllGenes</a></li><li><a href="global.html#searchGenes">searchGenes</a></li><li><a href="global.html#searchSetText">searchSetText</a></li><li><a href="global.html#testEnrichment">testEnrichment</a></li></ul>
+    
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">fetchSomeSets.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import * as utils from "./utils.js";
+import { rangesToBlocks, consolidateRanges } from "./consolidateRanges.js";
+import { extractRanges } from "./extractRanges.js";
+import { fetchAllSets } from "./fetchAllSets.js";
+import { fetchCollectionSizes } from "./fetchSomeCollections.js";
+
+async function initialize(species, config) {
+    let cache;
+    if ("fetchSomeSets" in config.cache) {
+        cache = config.cache.fetchSomeSets;
+    } else {
+        cache = new Map;
+        config.cache.fetchSomeSets = cache;
+    }
+
+    const fname = species + "_sets.tsv";
+    let spfound = cache.get(species);
+    if (typeof spfound == "undefined") {
+        const resolved = await Promise.all([
+            utils.retrieveRangesWithExtras(config, fname),
+            fetchCollectionSizes(species, config)
+        ]);
+        const { ranges, extra } = resolved[0];
+        const csizes = resolved[1];
+
+        spfound = {
+            intervals: ranges,
+            sizes: extra,
+            blocked: rangesToBlocks(ranges, config.consolidateBlockSize),
+            collections: null, 
+            prior: new Map
+        };
+
+        let parents = [];
+        let internal_number = [];
+        var totals = 0;
+        for (var i = 0; i &lt; csizes.length; i++) {
+            let colsize = csizes[i];
+            for (var j = 0; j &lt; colsize; j++) {
+                parents.push(i);
+                internal_number.push(j);
+            }
+            totals += colsize;
+        }
+        if (totals != extra.length) {
+            throw new Error("discrepancy between number of sets and sum of collection sizes");
+        }
+        spfound.collections = { parent: parents, number: internal_number };
+
+        cache.set(species, spfound);
+    }
+
+    return { fname, spfound };
+}
+
+/**
+ * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
+ * @param {object} config - Configuration object, see {@linkcode newConfig}.
+ * @return {Array} Number of genes in each set.
+ * Each value corresponds to a set in {@linkcode fetchAllSets}.
+ * @async
+ */
+export async function fetchSetSizes(species, config) {
+    if ("fetchAllSets" in config.cache) {
+        const everything = await fetchAllSets(species, config);
+        let output = [];
+        for (const x of everything) {
+            output.push(x.length);
+        }
+        return output;
+    }
+
+    const { spfound } = await initialize(species, config);
+    return spfound.sizes;
+}
+
+/**
+ * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
+ * @param {object} config - Configuration object, see {@linkcode newConfig}.
+ * @return {number} Total number of sets for this species.
+ * @async
+ */
+export async function numberOfSets(species, config) {
+    if ("fetchAllSets" in config.cache) {
+        const everything = await fetchAllSets(species, config);
+        return everything.length;
+    }
+
+    const { spfound } = await initialize(species, config);
+    return spfound.sizes.length;
+}
+
+/**
+ * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
+ * @param {Array} sets - Array of set IDs.
+ * Each ID is a row index in the array returned by {@linkcode fetchAllSets}. 
+ * @param {object} config - Configuration object, see {@linkcode newConfig}.
+ *
+ * @return {Array} Array of length equal to `sets`.
+ * Each entry is an object containing the set information for the corresponding set in `sets`.
+ *
+ * @async
+ */
+export async function fetchSomeSets(species, sets, config) {
+    if ("fetchAllSets" in config.cache) {
+        const everything = await fetchAllSets(species, config);
+        let output = [];
+        for (const s of sets) {
+            output.push(everything[s]);
+        }
+        return output;
+    }
+
+    const { fname, spfound } = await initialize(species, config);
+
+    let needed = utils.setdiff(sets, spfound.prior); 
+    if (needed.length > 0) {
+        const consolidated = consolidateRanges(spfound.intervals, spfound.blocked, needed);
+        const consolidated_parts = await config.fetchRanges(fname, consolidated.start, consolidated.end);
+
+        const dec = new TextDecoder;
+        extractRanges(
+            consolidated_parts,
+            consolidated.start,
+            consolidated.end,
+            spfound.intervals,
+            consolidated.requested,
+            (ii, sliced) => {
+                const txt = dec.decode(sliced);
+                let split = txt.split("\t");
+                spfound.prior.set(ii, {
+                    name: split[0],
+                    description: split[1],
+                    size: spfound.sizes[ii],
+                    collection: spfound.collections.parent[ii],
+                    number: spfound.collections.number[ii]
+                });
+            }
+        );
+    }
+
+    let output = [];
+    for (const s of sets) {
+        output.push(spfound.prior.get(s));
+    }
+    return output;
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+    
+    
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sat Apr 25 2026 06:49:17 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/polyfill.js"></script>
+<script src="scripts/linenumber.js"></script>
+
+<script src="scripts/search.js" defer></script>
+
+
+<script src="scripts/collapse.js" defer></script>
+
+
+</body>
+</html>

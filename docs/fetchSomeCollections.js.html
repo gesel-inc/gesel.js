@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="utf-8">
+    <title>fetchSomeCollections.js - Documentation</title>
+    
+    
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+    <script src="scripts/nav.js" defer></script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav >
+    
+    <input type="text" id="nav-search" placeholder="Search" />
+    
+    
+    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.roche.com/GP/gesel" target="_blank" class="menu-item" id="repository" >Github repo</a></h2><h3>Global</h3><ul><li><a href="global.html#adjustFdr">adjustFdr</a></li><li><a href="global.html#computeEnrichmentCurve">computeEnrichmentCurve</a></li><li><a href="global.html#countSetOverlaps">countSetOverlaps</a></li><li><a href="global.html#effectiveNumberOfGenes">effectiveNumberOfGenes</a></li><li><a href="global.html#fetchAllCollections">fetchAllCollections</a></li><li><a href="global.html#fetchAllGenes">fetchAllGenes</a></li><li><a href="global.html#fetchAllSets">fetchAllSets</a></li><li><a href="global.html#fetchCollectionSizes">fetchCollectionSizes</a></li><li><a href="global.html#fetchGenesForAllSets">fetchGenesForAllSets</a></li><li><a href="global.html#fetchGenesForSomeSets">fetchGenesForSomeSets</a></li><li><a href="global.html#fetchSetSizes">fetchSetSizes</a></li><li><a href="global.html#fetchSetsForAllGenes">fetchSetsForAllGenes</a></li><li><a href="global.html#fetchSetsForSomeGenes">fetchSetsForSomeGenes</a></li><li><a href="global.html#fetchSomeCollections">fetchSomeCollections</a></li><li><a href="global.html#fetchSomeSets">fetchSomeSets</a></li><li><a href="global.html#findOverlappingSets">findOverlappingSets</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#mapGenesByIdentifier">mapGenesByIdentifier</a></li><li><a href="global.html#newConfig">newConfig</a></li><li><a href="global.html#numberOfCollections">numberOfCollections</a></li><li><a href="global.html#numberOfSets">numberOfSets</a></li><li><a href="global.html#reindexGenesForAllSets">reindexGenesForAllSets</a></li><li><a href="global.html#reindexSetsForAllGenes">reindexSetsForAllGenes</a></li><li><a href="global.html#searchGenes">searchGenes</a></li><li><a href="global.html#searchSetText">searchSetText</a></li><li><a href="global.html#testEnrichment">testEnrichment</a></li></ul>
+    
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">fetchSomeCollections.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { rangesToBlocks, consolidateRanges } from "./consolidateRanges.js";
+import { extractRanges } from "./extractRanges.js";
+import { fetchAllCollections } from "./fetchAllCollections.js";
+import * as utils from "./utils.js";
+
+async function initialize(species, config) {
+    let cache;
+    if ("fetchSomeCollections" in config.cache) {
+        cache = config.cache.fetchSomeCollections;
+    } else {
+        cache = new Map;
+        config.cache.fetchSomeCollections = cache;
+    }
+
+    const fname = species + "_collections.tsv";
+    let spfound = cache.get(species);
+    if (typeof spfound == "undefined") {
+        const { ranges, extra } = await utils.retrieveRangesWithExtras(config, fname);
+        spfound = {
+            intervals: ranges,
+            blocked: rangesToBlocks(ranges, config.consolidateBlockSize),
+            sizes: extra,
+            starts: [],
+            prior: new Map
+        };
+
+        let first = 0;
+        for (const s of extra) {
+            spfound.starts.push(first);
+            first += s;
+        }
+
+        cache.set(species, spfound);
+    }
+
+    return { fname, spfound };
+}
+
+/**
+ * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
+ * @param {object} config - Configuration object, see {@linkcode newConfig}.
+ * @return {Array} Number of sets in each collection.
+ * Each value corresponds to a collection in {@linkcode fetchAllCollections}.
+ * @async
+ */
+export async function fetchCollectionSizes(species, config) {
+    if ("fetchAllCollections" in config.cache) {
+        const everything = await fetchAllCollections(species, config);
+        let output = [];
+        for (const x of everything) {
+            output.push(x.size);
+        }
+        return output;
+    }
+
+    const { spfound } = await initialize(species, config);
+    return spfound.sizes;
+}
+
+/**
+ * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
+ * @param {object} config - Configuration object, see {@linkcode newConfig}.
+ * @return {number} Total number of collections for this species.
+ * @async
+ */
+export async function numberOfCollections(species, config) {
+    if ("fetchAllCollections" in config.cache) {
+        const everything = await fetchAllCollections(species, config);
+        return everything.length;
+    }
+
+    const { spfound } = await initialize(species, config);
+    return spfound.sizes.length;
+}
+
+/**
+ * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
+ * @param {Array} collections - Array of collection IDs.
+ * Each entry is a row index into the array returned by {@linkcode fetchAllCollections}. 
+ * @param {object} config - Configuration object, see {@linkcode newConfig}.
+ * 
+ * @return {Array} Array of length equal to `collections`.
+ * Each entry is an object containing details about the corresponding collection in `collections`.
+ *
+ * @async
+ */
+export async function fetchSomeCollections(species, collections, config) {
+    if ("fetchAllCollections" in config.cache) {
+        const everything = await fetchAllCollections(species, config);
+        let output = [];
+        for (const c of collections) {
+            output.push(everything[c]);
+        }
+        return output;
+    }
+
+    const { fname, spfound } = await initialize(species, config);
+
+    let needed = utils.setdiff(collections, spfound.prior); 
+    if (needed.length > 0) {
+        const consolidated = consolidateRanges(spfound.intervals, spfound.blocked, needed);
+        const consolidated_parts = await config.fetchRanges(fname, consolidated.start, consolidated.end);
+
+        const dec = new TextDecoder;
+        extractRanges(
+            consolidated_parts,
+            consolidated.start,
+            consolidated.end,
+            spfound.intervals,
+            consolidated.requested,
+            (ii, sliced) => {
+                const txt = dec.decode(sliced);
+                const split = txt.split("\t");
+                spfound.prior.set(ii, {
+                    title: split[0],
+                    description: split[1],
+                    species: split[2],
+                    maintainer: split[3],
+                    source: split[4],
+                    start: spfound.starts[ii],
+                    size: spfound.sizes[ii]
+                });
+            }
+        );
+    }
+
+    let output = [];
+    for (const c of collections) {
+        output.push(spfound.prior.get(c));
+    }
+    return output;
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+    
+    
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sat Apr 25 2026 06:49:17 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/polyfill.js"></script>
+<script src="scripts/linenumber.js"></script>
+
+<script src="scripts/search.js" defer></script>
+
+
+<script src="scripts/collapse.js" defer></script>
+
+
+</body>
+</html>
