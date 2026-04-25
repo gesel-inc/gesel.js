@@ -67,7 +67,7 @@
 <p>Search for interesting gene sets, client-side.
 This uses Javascript to do the queries in the browser, improving latency and avoiding the need for a back-end service.
 Users can test for enrichment in their own list of genes and/or search by text in the set names or descriptions.
-The queries rely on prebuilt databases containing gene sets of interest - see <a href="https://github.com/LTLA/gesel-feedstock">here</a> for the expectations around the database files.</p>
+The queries rely on prebuilt databases containing gene sets of interest - see <a href="https://github.com/gesel-inc/gesel-spec">here</a> for the expectations around the database files.</p>
 <h2>Installation</h2>
 <p><a href="https://www.npmjs.com/package/gesel"><strong>gesel</strong></a> can be installed with the usual commands:</p>
 <pre class="prettyprint source lang-sh"><code>npm i gesel
@@ -75,18 +75,57 @@ The queries rely on prebuilt databases containing gene sets of interest - see <a
 <p><strong>gesel</strong> is implemented as an ES6 module, so importing is as simple as:</p>
 <pre class="prettyprint source lang-js"><code>import * as gesel from &quot;gesel&quot;;
 </code></pre>
-<p>See the <a href="https://ltla.github.io/gesel.js">API documentation</a> for all functions.</p>
-<h2>Example usage</h2>
-<p>Given a user-supplied set of genes, what are the overlapping gene sets in our references?
-First, we need to map our user-supplied genes to <strong>gesel</strong>'s internal identifiers.</p>
+<p>See the <a href="https://gesel-inc.github.io/gesel.js">API documentation</a> for all functions.</p>
+<h2>Configuring downloaders</h2>
+<p>First, we set up a configuration object that describes how to fetch content from the Gesel database.
+The example below just uses <code>fetch()</code> to download files (or parts thereof) from the <a href="https://github.com/gesel-inc/feedstock">feedstock repository</a>.
+Applications can customize this configuration with caching, authentication, etc.</p>
+<pre class="prettyprint source lang-js"><code>const databaseUrl = &quot;https://github.com/gesel-inc/feedstock/releases/download/indices-v0.3.0&quot;;
+const geneUrl = &quot;https://github.com/gesel-inc/feedstock/releases/download/genes-v0.3.0&quot;;
+
+async function getFile(name, url) {
+    let res = await fetch(url + &quot;/&quot; + name);
+    if (!res.ok) {
+        throw new Error(&quot;failed to fetch '&quot; + name + &quot;' (status &quot; + String(res.status) + &quot;)&quot;);
+    }
+    return res.arrayBuffer();
+}
+
+async function getRanges(name, url, start, end) {
+    // GitHub doesn't support multi-range requests, but if it did, we could use that instead.
+    const full_url = url + &quot;/&quot; + name;
+    const everything = [];
+    for (var i = 0; i &lt; start.length; i++) {
+        const resp = fetch(full_url, { headers: { Range: &quot;bytes=&quot; + String(start[i]) + &quot;-&quot; + String(end[i] - 1) } })
+            .then(
+                res => {
+                    if (!res.ok) {
+                        throw new Error(&quot;failed to fetch range from '&quot; + name + &quot;' (status &quot; + String(res.status) + &quot;)&quot;);
+                    }
+                    return res.arrayBuffer();
+                }
+            );
+        everything.push(resp);
+    }
+    return await Promise.all(everything);
+}
+
+const config = gesel.newConfig(
+    /* getGene = */ fname => getFile(fname, geneUrl),
+    /* getFile = */ fname => getFile(fname, databaseUrl),
+    /* getRanges = */ (fname, start, end) => getRanges(fname, databaseUrl, start, end)
+);
+</code></pre>
+<h2>Searching by gene</h2>
+<p>Now we consider the question: given a user-supplied set of genes, what are the overlapping gene sets in our references?
+We map the user-supplied gene symbols/identifiers to <strong>gesel</strong>'s internal identifiers:</p>
 <pre class="prettyprint source lang-js"><code>let user_supplied = [ &quot;SNAP25&quot;, &quot;NEUROD6&quot;, &quot;ENSG00000123307&quot;, &quot;TSPAN6&quot; ];
 
-/* Seeing if the user-supplied symbols/IDs are found in the human reference. */
-let user_supplied_ids = await gesel.searchGenes(&quot;9606&quot;, user_supplied);
+// Seeing if the user-supplied symbols/IDs are found in the human reference. */
+let user_supplied_ids = await gesel.searchGenes(&quot;9606&quot;, user_supplied, config);
 
-/* Taking the first matching ID for each user-supplied gene name. Applications
- * may prefer to print warnings/errors if there are multiple matches.
- */
+// Taking the first matching ID for each user-supplied gene name. Applications
+// may prefer to print warnings/errors if there are multiple matches.
 let user_supplied_union = [];
 for (const x of user_supplied_ids) {
     if (x.length >= 1) {
@@ -96,48 +135,147 @@ for (const x of user_supplied_ids) {
 </code></pre>
 <p>Then, we can search for the overlapping sets.
 This returns an array of objects with the set IDs, the number of overlapping genes, the size of each set and the enrichment p-value based on the hypergeometric distribution:</p>
-<pre class="prettyprint source lang-js"><code>let overlaps = await gesel.findOverlappingSets(&quot;9606&quot;, user_supplied_union);
+<pre class="prettyprint source lang-js"><code>let overlaps = await gesel.findOverlappingSets(&quot;9606&quot;, user_supplied_union, config);
+console.log(overlaps);
 </code></pre>
-<p>Once we have a set ID, we can query the references to obtain that set's details:</p>
-<pre class="prettyprint source lang-js"><code>let set_details = await gesel.fetchSingleSet(&quot;9606&quot;, overlaps[0].id);
+<pre class="prettyprint source"><code>[
+  { id: 61, count: 1, size: 66, pvalue: 0.006055375713038935 },
+  { id: 353, count: 1, size: 11, pvalue: 0.001011145568580063 },
+  { id: 612, count: 1, size: 68, pvalue: 0.0062384416641664275 },
+  { id: 2210, count: 1, size: 63, pvalue: 0.0057807294963071465 },
+  { id: 2295, count: 1, size: 37, pvalue: 0.003398077466451266 }
+]
 </code></pre>
+<p>Once we have a set ID, we can query the references to obtain that set's details.
+For example, we can examine the details of the first 5 sets:</p>
+<pre class="prettyprint source lang-js"><code>console.log(await gesel.fetchSomeSets(&quot;9606&quot;, overlaps.slice(0, 5).map(x => x.id), config));
+</code></pre>
+<pre class="prettyprint source"><code>[
+  {
+    name: 'GO:0000149',
+    description: 'SNARE binding',
+    size: 66,
+    collection: 0,
+    number: 61
+  },
+  {
+    name: 'GO:0001504',
+    description: 'neurotransmitter uptake',
+    size: 11,
+    collection: 0,
+    number: 353
+  },
+  {
+    name: 'GO:0001917',
+    description: 'photoreceptor inner segment',
+    size: 68,
+    collection: 0,
+    number: 612
+  },
+  {
+    name: 'GO:0005249',
+    description: 'voltage-gated potassium channel activity',
+    size: 63,
+    collection: 0,
+    number: 2210
+  },
+  {
+    name: 'GO:0005484',
+    description: 'SNAP receptor activity',
+    size: 37,
+    collection: 0,
+    number: 2295
+  }
+]
+</code></pre>
+<h2>Searching by text</h2>
 <p>Each set also has some associated free text in its name and description.
-We can do some simple queries via <strong>gesel</strong>:</p>
-<pre class="prettyprint source lang-js"><code>let hits = await gesel.searchSetText(&quot;9606&quot;, &quot;B immune&quot;);
-let first_hit = await gesel.fetchSingleSet(&quot;9606&quot;, hits[0]);
-
-// '*' and '?' wildcards are also supported.
-let hits2 = await gesel.searchSetText(&quot;9606&quot;, &quot;B immun*&quot;);
-let first_hit2 = await gesel.fetchSingleSet(&quot;9606&quot;, hits2[0]);
+We can do some simple queries on this text:</p>
+<pre class="prettyprint source lang-js"><code>let hits = await gesel.searchSetText(&quot;9606&quot;, &quot;B immune&quot;, config);
+console.log(await gesel.fetchSomeSets(&quot;9606&quot;, hits.slice(0, 5), config));
+</code></pre>
+<pre class="prettyprint source"><code>[
+  {
+    name: 'GO:0002312',
+    description: 'B cell activation involved in immune response',
+    size: 17,
+    collection: 0,
+    number: 843
+  },
+  {
+    name: 'GO:0002313',
+    description: 'mature B cell differentiation involved in immune response',
+    size: 4,
+    collection: 0,
+    number: 844
+  },
+  {
+    name: 'GO:0002322',
+    description: 'B cell proliferation involved in immune response',
+    size: 6,
+    collection: 0,
+    number: 852
+  },
+  {
+    name: 'GO:0090717',
+    description: 'adaptive immune memory response involving T cells and B cells',
+    size: 3,
+    collection: 0,
+    number: 14499
+  },
+  {
+    name: 'GO:0090721',
+    description: 'primary adaptive immune response involving T cells and B cells',
+    size: 1,
+    collection: 0,
+    number: 14501
+  }
+]
+</code></pre>
+<p><code>*</code> and <code>?</code> wildcards are also supported:</p>
+<pre class="prettyprint source lang-js"><code>let hits2 = await gesel.searchSetText(&quot;9606&quot;, &quot;B immun*&quot;, config);
+console.log(await gesel.fetchSomeSets(&quot;9606&quot;, hits2.slice(0, 5), config));
+</code></pre>
+<pre class="prettyprint source"><code>[
+  {
+    name: 'GO:0002312',
+    description: 'B cell activation involved in immune response',
+    size: 17,
+    collection: 0,
+    number: 843
+  },
+  {
+    name: 'GO:0002313',
+    description: 'mature B cell differentiation involved in immune response',
+    size: 4,
+    collection: 0,
+    number: 844
+  },
+  {
+    name: 'GO:0002322',
+    description: 'B cell proliferation involved in immune response',
+    size: 6,
+    collection: 0,
+    number: 852
+  },
+  {
+    name: 'GO:0019724',
+    description: 'B cell mediated immunity',
+    size: 6,
+    collection: 0,
+    number: 5637
+  },
+  {
+    name: 'GO:0090717',
+    description: 'adaptive immune memory response involving T cells and B cells',
+    size: 3,
+    collection: 0,
+    number: 14499
+  }
+]
 </code></pre>
 <p>This can be combined with the output of <code>findOverlappingSets</code> to find all gene sets that overlap the user-supplied set <em>and</em> contain the desired keywords.</p>
 <pre class="prettyprint source lang-js"><code>let combined = gesel.intersect([ hits, overlaps.map(x => x.id) ]);
-</code></pre>
-<h2>Overriding the downloader</h2>
-<p>By default, we use the reference gene sets collated in the <a href="https://github.com/LTLA/gesel-feedstock">feedstock repository</a>.
-However, users can point <strong>gesel</strong> to their own references by overriding the URLs before calling any <strong>gesel</strong> functions.
-For example, if our prebuilt references are hosted on some other URL:</p>
-<pre class="prettyprint source lang-js"><code>gesel.referenceBaseUrl(&quot;https://some.company.com/prebuilt-gesel-db&quot;);
-gesel.geneBaseUrl(&quot;https://some.company.com/prebuilt-gesel-genes&quot;);
-</code></pre>
-<p>More advanced users can override the downloader functions to customize the request and handling of the response.
-The example below attaches an authorization header to the request; the same approach can be used to cache the response on-disk for faster responsiveness on subsequent visits to an application.</p>
-<pre class="prettyprint source lang-js"><code>// To set the downloader for the reference files.
-gesel.referenceDownload(async (file, start = null, end = null) => {
-    const url = gesel.referenceBaseUrl() + &quot;/&quot; + file;
-    if (start == null) {
-        return fetch(url, { headers: { Authorization: &quot;Bearer XXX&quot; } });
-    } else {
-        let range_text = &quot;bytes=&quot; + String(start) + &quot;-&quot; + String(end);
-        return fetch(url, { headers: { Authorization: &quot;Bearer XXX&quot;, Range: range_text } });
-    }
-});
-
-// To set the downloader for gene information.
-gesel.geneDownload(file => {
-    const url = gesel.geneBaseUrl() + &quot;/&quot; + file;
-    return fetch(url, { headers: { Authorization: &quot;Bearer XXX&quot; } });
-});
 </code></pre>
 <h2>Implementation details</h2>
 <p>By default, <strong>gesel</strong> uses HTTP range requests to efficiently extract slices of data from the databases.
@@ -148,9 +286,10 @@ without downloading the entirety of the associated refences files.
 Only the range indices need to be transferred to the client - as of time of writing, this amounts to an acceptably small payload (&lt; 2 MB).</p>
 <p>That said, some applications may prefer to download the entire database up-front rather than performing range requests for each query.
 This may be more performant for batch processing where repeated range requests would unnecessarily increase network activity.
-In those cases, we provide functions like <code>fetchGenesForAllSets()</code> and options like <code>forceDownload = true</code> to trigger a full download of the relevant file(s) on first use.
-Subsequent calls to related functions like <code>fetchGenesForSet()</code> will then re-use this data and skip range requests.
-This approach transfers more data to the client but is still practical - the default human gene set database (containing the Gene Ontology and almost all MSigDB gene sets) is less than 9 MB in size, which is a tolerable payload.</p>
+In those cases, we provide functions like <code>fetchGenesForAllSets()</code> to trigger a full download of the relevant file(s) on first use.
+Subsequent calls to related functions like <code>fetchGenesForSomeSets()</code> will then re-use this data and skip range requests.
+This approach transfers more data to the client but is still practical -
+the default human gene set database (containing the Gene Ontology and almost all MSigDB gene sets) is less than 9 MB in size, which is a tolerable payload.</p>
 <p><strong>gesel</strong> will automatically cache responses in memory to reduce network traffic across the lifetime of a single session.
 Note that no caching is done across sessions, though users can add their own (e.g., with IndexedDB or the Cache API) by overriding the downloader.</p></article>
     </section>
@@ -167,7 +306,7 @@ Note that no caching is done across sessions, though users can add their own (e.
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sat Apr 25 2026 09:32:44 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sat Apr 25 2026 11:42:24 GMT+0000 (Coordinated Universal Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
