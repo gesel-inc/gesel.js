@@ -1,11 +1,9 @@
 import { fetchAllGenes } from "./fetchAllGenes.js";
 
-var by_symbol = new Map;
-var by_symbol_lower = new Map;
-
 /**
  * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
  * @param {string} type - Type of the identifier to use as the key of the map, e.g., `"ensembl"`.
+ * @param {object} config - Configuration object, see {@linkcode newConfig}.
  * @param {object} [options={}] - Optional parameters.
  * @param {boolean} [options.lowerCase=false] - Whether to use lower-case keys in the map.
  *
@@ -14,21 +12,31 @@ var by_symbol_lower = new Map;
  *
  * @async
  */
-export async function mapGenesByIdentifier(species, type, { lowerCase = false } = {}) {
-    let host = (lowerCase ? by_symbol_lower : by_symbol);
-
-    let sfound = host.get(species);
-    if (typeof sfound === "undefined") {
-        sfound = new Map;
-        host.set(species, sfound);
+export async function mapGenesByIdentifier(species, type, config, { lowerCase = false } = {}) {
+    let cache;
+    if ("mapGenesByIdentifier" in config.cache) {
+        cache = config.cache.mapGenesByIdentifier;
+    } else {
+        cache = new Map;
+        config.cache.mapGenesByIdentifier = cache;
     }
 
-    let tfound = sfound.get(type);
+    let spfound = cache.get(species);
+    if (typeof spfound == "undefined") {
+        spfound = {
+            normal: new Map,
+            lower: new Map
+        };
+        cache.set(species, spfound);
+    }
+
+    let host = (lowerCase ? spfound.lower : spfound.normal);
+    let tfound = host.get(type);
     if (typeof tfound === "undefined") {
         tfound = new Map;
-        sfound.set(type, tfound);
+        host.set(type, tfound);
 
-        let _genes = (await fetchAllGenes(species, { types: [ type ] })).get(type);
+        let _genes = (await fetchAllGenes(species, config, { types: [ type ] })).get(type);
         for (var i = 0; i < _genes.length; i++) {
             for (let y of _genes[i]) {
                 if (lowerCase) {

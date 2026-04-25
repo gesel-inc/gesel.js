@@ -2,7 +2,8 @@ import * as utils from "./utils.js";
 import * as gesel from "../src/index.js";
 
 test("fetchAllCollections works as expected", async () => {
-    let coll = await gesel.fetchAllCollections("9606");
+    const tconf = utils.createTestConfig();
+    let coll = await gesel.fetchAllCollections("9606", tconf);
     expect(coll.length).toBeGreaterThan(0);
 
     let is_okay = 0;
@@ -18,5 +19,8 @@ test("fetchAllCollections works as expected", async () => {
 
     expect(is_okay).toEqual(coll.length);
     expect(coll[0].start).toEqual(0);
-})
 
+    // Works with reloading from the cache.
+    let reloaded = await gesel.fetchAllCollections("9606", tconf);
+    expect(coll).toEqual(reloaded);
+})

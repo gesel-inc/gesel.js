@@ -1,98 +1,95 @@
 import * as gesel from "../src/index.js";
 import * as search from "../src/searchSetText.js";
 import * as utils from "./utils.js";
-import "isomorphic-fetch"
-
-test("searching by text works as expected", async () => {
-    let all_info = await gesel.fetchAllSets("10090");
-
-    // Searching the names only.
-    {
-        let results = await gesel.searchSetText("10090", "GO 0000002", { inDescription: false });
-        expect(results.length).toBeGreaterThan(0);
-        expect(all_info[results[0]].name).toEqual("GO:0000002");
-    }
-
-    // Searching the descriptions only.
-    {
-        let results = await gesel.searchSetText("10090", "metabolism", { inName: false });
-        expect(results.length).toBeGreaterThan(0);
-        for (var i = 0; i < Math.min(10, results.length); i++) {
-            let deets = await gesel.fetchSingleSet("10090", results[i]);
-            expect(deets.description).toMatch(/metabolism/i);
-        }
-    }
-
-    // Multiword search.
-    {
-        let results = await gesel.searchSetText("10090", "T immune");
-        expect(results.length).toBeGreaterThan(0);
-        for (var i = 0; i < Math.min(10, results.length); i++) {
-            let deets = await gesel.fetchSingleSet("10090", results[i]);
-            expect(deets.description).toMatch(/T.*immune/i);
-        }
-    }
-})
 
 test("binary search works as expected", async () => {
     let ref = [ "A", "B", "C", "D", "E" ];
-    expect(search.binarySearch("A", ref)).toEqual(0);
-    expect(search.binarySearch("0", ref)).toEqual(0);
-    expect(search.binarySearch("AB", ref)).toEqual(1);
-    expect(search.binarySearch("C", ref)).toEqual(2);
-    expect(search.binarySearch("CD", ref)).toEqual(3);
-    expect(search.binarySearch("E", ref)).toEqual(4);
-    expect(search.binarySearch("E0", ref)).toEqual(5);
-    expect(search.binarySearch("F", ref)).toEqual(5);
+    expect(search.binarySearchRight("A", ref)).toEqual(0);
+    expect(search.binarySearchRight("0", ref)).toEqual(0);
+    expect(search.binarySearchRight("AB", ref)).toEqual(1);
+    expect(search.binarySearchRight("C", ref)).toEqual(2);
+    expect(search.binarySearchRight("CD", ref)).toEqual(3);
+    expect(search.binarySearchRight("E", ref)).toEqual(4);
+    expect(search.binarySearchRight("E0", ref)).toEqual(5);
+    expect(search.binarySearchRight("F", ref)).toEqual(5);
 })
 
-test("searching by text works with wildcards", async () => {
-    let everything = await gesel.fetchAllSets("10090");
+test("searching by text works as expected", async () => {
+    const tconf = utils.createTestConfig();
+    const set_info = await gesel.fetchAllSets("10090", tconf);
 
-    // Single word search.
     {
-        let results = await gesel.searchSetText("10090", "immun*");
-        expect(results.length).toBeGreaterThan(0);
+        const cout = await gesel.searchSetText("10090", "cancer", tconf)
+        expect(cout.length).toBeGreaterThan(0);
+        for (const x of cout) {
+            const current = set_info[x];
+            const matches = current.name.match(/cancer/i) || current.description.match(/cancer/i); 
+            expect(Boolean(matches)).toEqual(true);
+        }
+    } 
 
-        let has_immunity = 0;
-        let has_immune = 0;
-        let is_okay = 0;
-        for (var i = 0; i < results.length; i++) {
-            let deets = await gesel.fetchSingleSet("10090", results[i]);
-            has_immune += deets.description.match("immune") !== null;
-            has_immunity += deets.description.match("immunity") !== null;
-            is_okay += deets.description.match(/immun/i) !== null;
+    // Multiple words with a prefixed wildcard.
+    {
+        const iout = await gesel.searchSetText("10090", "innate immun*", tconf);
+        expect(iout.length).toBeGreaterThan(0);
+        for (const x of iout) {
+            const current = set_info[x];
+            const matches_innate = current.name.match(/innate/i) || current.description.match(/innate/i); 
+            const matches_immune = current.name.match(/immun.*/i) || current.description.match(/immun.*/i); 
+            expect(Boolean(matches_innate && matches_immune)).toEqual(true);
         }
 
-        expect(has_immune).toBeGreaterThan(0);
-        expect(has_immunity).toBeGreaterThan(0);
-        expect(is_okay).toBe(results.length);
+        const aout = await gesel.searchSetText("10090", "adaptive immun*", tconf)
+        expect(aout.length).toBeGreaterThan(0);
+        for (const x of aout) {
+            const current = set_info[x];
+            const matches_adaptive = current.name.match(/adaptive/i) || current.description.match(/adaptive/i); 
+            const matches_immune = current.name.match(/immun.*/i) || current.description.match(/immun.*/i); 
+            expect(Boolean(matches_adaptive && matches_immune)).toEqual(true);
+        }
     }
 
-    // Multiword search.
+    // Trying with only the name or description (also tests the cache).
     {
-        let results = await gesel.searchSetText("10090", "B immun*");
-        expect(results.length).toBeGreaterThan(0);
-
-        let has_immunity = 0;
-        let has_immune = 0;
-        let is_okay = 0;
-        for (var i = 0; i < results.length; i++) {
-            let deets = await gesel.fetchSingleSet("10090", results[i]);
-            has_immune += deets.description.match(/B.*immune/) !== null;
-            has_immunity += deets.description.match(/B.*immunity/) !== null;
-            is_okay += deets.description.match(/B/) !== null && deets.description.match(/immun.*/) !== null;
+        const iout_noname = await gesel.searchSetText("10090", "immun*", tconf, { inName: false });
+        expect(iout_noname.length).toBeGreaterThan(0);
+        for (const x of iout_noname) {
+            const current = set_info[x];
+            const matches = current.description.match(/immun.*/i);
+            expect(Boolean(matches)).toBe(true);
         }
 
-        expect(has_immune).toBeGreaterThan(0);
-        expect(has_immunity).toBeGreaterThan(0);
-        expect(is_okay).toBe(results.length);
-    }
-})
+        const iout_nodesc = await gesel.searchSetText("10090", "immun*", tconf, { inDescription: false });
+        expect(iout_nodesc.length).toBeGreaterThan(0);
+        for (const x of iout_nodesc) {
+            const current = set_info[x];
+            const matches = current.name.match(/immun.*/i);
+            expect(Boolean(matches)).toBe(true);
+        }
 
-test("searching by text works with preloading", async () => {
-    let all_info = await gesel.fetchAllSets("10090");
-    await gesel.preloadSearchSetText("10090");
-    let results = await gesel.searchSetText("10090", "GO 0000009");
-    expect(all_info[results[0]].name).toEqual("GO:0000009");
+        const iout_none = await gesel.searchSetText("10090", "immun*", tconf, { inDescription: false, inName: false });
+        expect(iout_none.length).toEqual(0);
+    }
+
+    // Non-prefixed wildcard.
+    {
+        const nout = await gesel.searchSetText("10090", "*nucleic*", tconf);
+        expect(nout.length).toBeGreaterThan(0);
+        for (const x of nout) {
+            const current = set_info[x];
+            const matches = current.name.match(/.*nucleic.*/i) || current.description.match(/.*nucleic.*/i); 
+            expect(Boolean(matches)).toEqual(true);
+        }
+    }
+
+    // Trying a rare question mark.
+    {
+        const pout = await gesel.searchSetText("10090", "?ancreas", tconf);
+        expect(pout.length).toBeGreaterThan(0);
+        for (const x of pout) {
+            const current = set_info[x];
+            const matches = current.name.match(/.ancreas/i) || current.description.match(/.ancreas/i); 
+            expect(Boolean(matches)).toEqual(true);
+        }
+    }
 })

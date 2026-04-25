@@ -12,7 +12,8 @@ var candidates = [
 ];
 
 test("mapping multiple genes works as expected", async () => {
-    var output = await gesel.searchGenes("9606", candidates);
+    const tconf = utils.createTestConfig();
+    var output = await gesel.searchGenes("9606", candidates, tconf);
     expect(output.length).toBe(candidates.length);
 
     // Case-insensitive matches.
@@ -21,12 +22,10 @@ test("mapping multiple genes works as expected", async () => {
 
     // This one is okay.
     expect(output[2].length).toBe(1);
-    var ginfo = await gesel.fetchAllGenes("9606");
-    expect(ginfo.get("ensembl")[output[2][0]][0]).toBe(candidates[2]);
-
-    // This one is also okay.
     expect(output[3].length).toBe(1);
-    var ginfo = await gesel.fetchAllGenes("9606");
+
+    var ginfo = await gesel.fetchAllGenes("9606", tconf);
+    expect(ginfo.get("ensembl")[output[2][0]][0]).toBe(candidates[2]);
     expect(ginfo.get("ensembl")[output[3][0]][0]).toBe(candidates[3].toUpperCase());
 
     // Bad!
@@ -36,7 +35,8 @@ test("mapping multiple genes works as expected", async () => {
 });
 
 test("mapping multiple genes works in a case-sensitive manner", async () => {
-    var output = await gesel.searchGenes("9606", candidates, { ignoreCase: false });
+    const tconf = utils.createTestConfig();
+    var output = await gesel.searchGenes("9606", candidates, tconf, { ignoreCase: false });
     expect(output.length).toBe(candidates.length);
 
     // Symbols don't match anymore.
@@ -56,7 +56,8 @@ test("mapping multiple genes works in a case-sensitive manner", async () => {
 });
 
 test("mapping multiple genes works with other species", async () => {
-    var output = await gesel.searchGenes("10090", candidates);
+    const tconf = utils.createTestConfig();
+    var output = await gesel.searchGenes("10090", candidates, tconf);
     expect(output.length).toBe(candidates.length);
 
     // Case insensitive matches.

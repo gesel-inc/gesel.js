@@ -15,7 +15,6 @@
   },
   "devDependencies": {
     "docdash": "^2.0.1",
-    "isomorphic-fetch": "^3.0.0",
     "jest": "^30.3.0",
     "jsdoc": "^4.0.5"
   },

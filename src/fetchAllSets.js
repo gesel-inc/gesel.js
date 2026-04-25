@@ -1,13 +1,9 @@
-import { reference_download, decompressLines } from "./utils.js";
+import { decompressLines } from "./utils.js";
 import { fetchAllCollections } from "./fetchAllCollections.js";
-
-var _sets = new Map;
 
 /**
  * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
- * @param {object} [options={}] - Optional parameters.
- * @param {boolean} [options.download=true] - Whether to download the set details if they are not already available.
- * If `false`, `null` is returned if the set details have not already been loaded into memory.
+ * @param {object} config - Configuration object, see {@linkcode newConfig}.
  *
  * @return {Array} Array of objects where each entry corresponds to a set and contains the details about that set.
  * Each object can be expected to contain:
@@ -20,25 +16,27 @@ var _sets = new Map;
  *
  * In a **gesel** context, the identifier for a set (i.e., the "set ID") is defined as the index of the set in this array.
  *
- * If the set details have not already been loaded and `download = false`, `null` is returned.
  * @async
  */
-export async function fetchAllSets(species, { download = true } = {}) {
-    let found = _sets.get(species);
+export async function fetchAllSets(species, config) {
+    let cache;
+    if ("fetchAllSets" in config.cache) {
+        cache = config.cache.fetchAllSets;
+    } else {
+        cache = new Map;
+        config.cache.fetchAllSets = cache;
+    }
+
+    let found = cache.get(species);
     if (typeof found !== "undefined") {
         return found;
-    } else if (!download) {
-        return null;
     }
 
     found = [];
-    _sets.set(species, found);
+    cache.set(species, found);
 
-    var [ sres, _collections ] = await Promise.all([reference_download(species + "_sets.tsv.gz"), fetchAllCollections(species)]);
-    if (!sres.ok) {
-        throw new Error("failed to fetch set information for species '" + species + "'");
-    }
-    var set_data = await decompressLines(await sres.arrayBuffer());
+    var [ sres, collections ] = await Promise.all([config.fetchFile(species + "_sets.tsv.gz"), fetchAllCollections(species, config)]);
+    var set_data = await decompressLines(sres);
 
     for (var i = 0; i < set_data.length; i++) {
         let x = set_data[i];
@@ -51,8 +49,8 @@ export async function fetchAllSets(species, { download = true } = {}) {
     }
 
     let start = 0;
-    for (var i = 0; i < _collections.length; i++) {
-        let len = _collections[i].size;
+    for (var i = 0; i < collections.length; i++) {
+        let len = collections[i].size;
 
         // For easier access going the other way.
         for (var j = 0; j < len; j++) {

@@ -1,15 +1,15 @@
-import { fetchSetSizes } from "./fetchSingleSet.js";
-import { fetchSetsForGene, effectiveNumberOfGenes } from "./fetchSetsForGene.js";
+import { fetchSetSizes } from "./fetchSomeSets.js";
+import { fetchSetsForSomeGenes, effectiveNumberOfGenes } from "./fetchSetsForSomeGenes.js";
 import * as enrich from "./testEnrichment.js";
 
 /**
  * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
  * @param {Array} genes - Array of unique integers containing user-supplied gene IDs, see {@linkcode fetchAllGenes} for details.
+ * @param {object} config - Configuration object, see {@linkcode newConfig}.
  * @param {object} [options={}] - Optional parameters.
  * @param {boolean} [options.includeSize=true] - Whether to include the size of each set in the output.
  * @param {boolean} [options.testEnrichment=true] - Whether to compute the enrichment p-value for each set with {@linkcode testEnrichment}.
  * The list and universe sizes will only count genes that are involved in at least one set, by checking {@linkcode fetchSetsForGene} and {@linkcode effectiveNumberOfGenes} respectively.
- * @param {boolean} [options.forceDownload=false] - See {@linkcode fetchSetsForGene}.
  *
  * @return {Array} An array of objects, where each object corresponds to a set that has non-zero overlaps with `genes`.
  * Each object contains:
@@ -23,22 +23,12 @@ import * as enrich from "./testEnrichment.js";
  *
  * @async
  */
-export async function findOverlappingSets(species, genes, { includeSize = true, testEnrichment = true, forceDownload = false } = {}) {
-    await fetchSetsForGene(species, null, { forceDownload });
-
-    let promises = [];
-    let queried = new Set;
-    for (const g of genes) {
-        if (!queried.has(g)) {
-            promises.push(fetchSetsForGene(species, g));
-            queried.add(g);
-        }
-    }
-
-    let collected = await Promise.all(promises);
+export async function findOverlappingSets(species, genes, config, { includeSize = true, testEnrichment = true } = {}) {
+    genes = Array.from(new Set(genes));
+    let collected = await fetchSetsForSomeGenes(species, genes, config);
     let output = countSetOverlaps(collected);
 
-    let sets_sizes = (includeSize || testEnrichment ? await fetchSetSizes(species) : null);
+    let sets_sizes = (includeSize || testEnrichment ? await fetchSetSizes(species, config) : null);
     if (includeSize) {
         for (const details of output) {
             details.size = sets_sizes[details.id];
@@ -49,7 +39,7 @@ export async function findOverlappingSets(species, genes, { includeSize = true, 
         for (const v of collected) {
             effective_list += (v.length > 0);
         }
-        let universe = await effectiveNumberOfGenes(species);
+        let universe = await effectiveNumberOfGenes(species, config);
         for (const details of output) {
             details.pvalue = enrich.testEnrichment(details.count, effective_list, sets_sizes[details.id], universe);
         }

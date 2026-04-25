@@ -1,9 +1,8 @@
-import { gene_download, decompressLines } from "./utils.js";
-
-var _genes = new Map;
+import { decompressLines } from "./utils.js";
 
 /**
  * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
+ * @param {object} config - Configuration object, see {@linkcode newConfig}.
  * @param {object} [options={}] - Optional parameters.
  * @param {?Array} [options.types=null] - Array of strings specifying the identifier types to be retrieved.
  * The exact choice of strings depends on how the references were constructed.
@@ -17,26 +16,34 @@ var _genes = new Map;
  *
  * @async
  */
-export async function fetchAllGenes(species, { types = null } = {}) {
+export async function fetchAllGenes(species, config, { types = null } = {}) {
     if (types == null) {
         types = [ "symbol", "entrez", "ensembl" ];
     }
 
-    let target = _genes.get(species);
+    let cache;
+    if ("fetchAllGenes" in config.cache) {
+        cache = config.cache.fetchAllGenes;
+    } else {
+        cache = new Map;
+        config.cache.fetchAllGenes = cache;
+    }
+
+    let target = cache.get(species);
     if (typeof target == "undefined") {
         target = new Map;
-        _genes.set(species, target);
+        cache.set(species, target);
     }
 
     let output = new Map;
     let promises = [];
-    let processing = [];
+    let processed_types = [];
 
     for (const t of types) {
         let found = target.get(t);
         if (typeof found == "undefined") {
-            promises.push(gene_download(species + "_" + t + ".tsv.gz"));
-            processing.push(t);
+            promises.push(config.fetchGene(species + "_" + t + ".tsv.gz"));
+            processed_types.push(t);
         } else {
             output.set(t, found);
         }
@@ -45,13 +52,7 @@ export async function fetchAllGenes(species, { types = null } = {}) {
     if (promises.length > 0) {
         let resolved = await Promise.all(promises);
         for (var i = 0; i < resolved.length; i++) {
-            let res = resolved[i];
-            if (!res.ok) {
-                throw "failed to fetch symbol information for genes";
-            }
-            var buffer = await res.arrayBuffer();
-
-            let gene_data = await decompressLines(buffer);
+            let gene_data = await decompressLines(resolved[i]);
             let processed = [];
             for (const x of gene_data) {
                 if (x == "") {
@@ -61,7 +62,7 @@ export async function fetchAllGenes(species, { types = null } = {}) {
                 }
             }
 
-            let t = processing[i];
+            let t = processed_types[i];
             target.set(t, processed);
             output.set(t, processed);
         }

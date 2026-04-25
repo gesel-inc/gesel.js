@@ -2,9 +2,10 @@ import * as utils from "./utils.js";
 import * as gesel from "../src/index.js";
 
 test("mapGenesByIdentifier works as expected", async () => {
-    let info = await gesel.mapGenesByIdentifier("10090", "symbol", { lowerCase: false });
+    const tconf = utils.createTestConfig();
+    let info = await gesel.mapGenesByIdentifier("10090", "symbol", tconf, { lowerCase: false });
     expect(info.size).toBeGreaterThan(0);
-    let nvals = (await gesel.fetchAllGenes("10090")).get("ensembl").length; // every type's array should have the same length.
+    let nvals = (await gesel.fetchAllGenes("10090", tconf)).get("ensembl").length; // every type's array should have the same length.
 
     let is_upper = 0;
     let okay_ids = 0;
@@ -23,9 +24,10 @@ test("mapGenesByIdentifier works as expected", async () => {
 })
 
 test("mapGenesByIdentifier works as expected with lowercasing", async () => {
-    let info = await gesel.mapGenesByIdentifier("10090", "symbol", { lowerCase: true });
+    const tconf = utils.createTestConfig();
+    let info = await gesel.mapGenesByIdentifier("10090", "symbol", tconf, { lowerCase: true });
     expect(info.size).toBeGreaterThan(0);
-    let nvals = (await gesel.fetchAllGenes("10090")).get("ensembl").length;
+    let nvals = (await gesel.fetchAllGenes("10090", tconf)).get("ensembl").length;
 
     let is_upper = 0;
     let okay_ids = 0;

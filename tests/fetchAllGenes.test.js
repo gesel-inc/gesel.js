@@ -2,7 +2,8 @@ import * as utils from "./utils.js";
 import * as gesel from "../src/index.js";
 
 test("fetchAllGenes works as expected", async () => {
-    let info = await gesel.fetchAllGenes("10090");
+    const tconf = utils.createTestConfig();
+    let info = await gesel.fetchAllGenes("10090", tconf);
 
     let ens = info.get("ensembl");
     expect(ens.length).toBeGreaterThan(30000);
@@ -34,13 +35,17 @@ test("fetchAllGenes works as expected", async () => {
     expect(count_ens).toBeGreaterThan(30000);
     expect(count_ent).toBeGreaterThan(30000);
     expect(count_sym).toBeGreaterThan(30000);
+
+    // Works with reloading from the cache.
+    let reloaded = await gesel.fetchAllGenes("10090", tconf);
+    expect(info).toEqual(reloaded);
 })
 
 test("fetchAllGenes works as expected with a subset of types", async () => {
-    let info = await gesel.fetchAllGenes("9606", { types: [ "symbol" ] });
+    const tconf = utils.createTestConfig();
+    let info = await gesel.fetchAllGenes("9606", tconf, { types: [ "symbol" ] });
     let sym = info.get("symbol");
     expect(sym.length).toBeGreaterThan(0);
     expect(info.has("entrez")).toBe(false);
     expect(info.has("ensembl")).toBe(false);
 })
-

@@ -2,9 +2,10 @@ import * as utils from "./utils.js";
 import * as gesel from "../src/index.js";
 
 test("fetchAllSets works as expected", async () => {
-    let sets = await gesel.fetchAllSets("7227");
+    const tconf = utils.createTestConfig();
+    let sets = await gesel.fetchAllSets("7227", tconf);
     expect(sets.length).toBeGreaterThan(0);
-    let coll = await gesel.fetchAllCollections("7227");
+    let coll = await gesel.fetchAllCollections("7227", tconf);
 
     let is_okay = 0;
     for (const x of sets) {
@@ -18,5 +19,8 @@ test("fetchAllSets works as expected", async () => {
     expect(is_okay).toEqual(sets.length);
     expect(sets[0].collection).toEqual(0);
     expect(sets[0].number).toEqual(0);
-})
 
+    // Works with reloading from the cache.
+    let reloaded = await gesel.fetchAllSets("7227", tconf);
+    expect(sets).toEqual(reloaded);
+})

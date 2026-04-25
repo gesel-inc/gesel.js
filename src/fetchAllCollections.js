@@ -1,12 +1,8 @@
-import { reference_download, decompressLines } from "./utils.js";
-
-var _collections = new Map;
+import { decompressLines } from "./utils.js";
 
 /**
  * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
- * @param {object} [options={}] - Optional parameters.
- * @param {boolean} [options.download=true] - Whether to download the collection details if they are not already available.
- * If `false`, `null` is returned if the collection details have not already been loaded into memory.
+ * @param {object} config - Configuration object, see {@linkcode newConfig}.
  *
  * @return {?Array} Array of objects where each entry corresponds to a set collection and contains details about that collection.
  * Each object can be expected to contain:
@@ -23,25 +19,27 @@ var _collections = new Map;
  *
  * In a **gesel** context, the identifier for a collection (i.e., the "collection ID") is defined as the index of the collection in this array.
  *
- * If the collection details have not already been loaded and `download = false`, `null` is returned.
  * @async
  */
-export async function fetchAllCollections(species, { download = true } = {}) {
-    let target = _collections.get(species);
+export async function fetchAllCollections(species, config) {
+    let cache;
+    if ("fetchAllCollections" in config.cache) {
+        cache = config.cache.fetchAllCollections;
+    } else {
+        cache = new Map;
+        config.cache.fetchAllCollections = cache;
+    }
+
+    let target = cache.get(species);
     if (typeof target !== "undefined") {
         return target;
-    } else if (!download) {
-        return null;
     }
 
     target = [];
-    _collections.set(species, target);
+    cache.set(species, target);
 
-    var cres = await reference_download(species + "_collections.tsv.gz");
-    if (!cres.ok) {
-        throw new Error("failed to fetch collection information for species '" + species + "'");
-    }
-    var coll_data = await decompressLines(await cres.arrayBuffer());
+    var cres = await config.fetchFile(species + "_collections.tsv.gz");
+    var coll_data = await decompressLines(cres);
 
     var start = 0;
     for (var i = 0; i < coll_data.length; i++) {
