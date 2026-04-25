@@ -1,5 +1,7 @@
 export { intersect } from "./utils.js";
 
+export { newConfig, flushMemoryCache } from "./newConfig.js";
+
 export { fetchAllGenes } from "./fetchAllGenes.js";
 export { mapGenesByIdentifier } from "./mapGenesByIdentifier.js";
 export { searchGenes } from "./searchGenes.js";

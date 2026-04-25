@@ -35,3 +35,13 @@ export function newConfig(fetchGene, fetchFile, fetchRanges, { consolidateBlockS
         consolidateBlockSize
     }
 }
+
+/**
+ * @param {object} config - Configuration object, see {@linkcode newConfig}.
+ *
+ * Flush all cached objects in `config`.
+ * This can be occasionally useful if the cache becomes too large.
+ */
+export function flushMemoryCache(config) {
+    config.cache = {};
+}
