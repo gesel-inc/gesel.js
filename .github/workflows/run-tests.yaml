@@ -1,4 +1,8 @@
-on: [push]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
 
 name: Run tests
 
@@ -18,6 +22,12 @@ jobs:
       with:
         path: '**/node_modules'
         key: modules-${{ hashFiles('**/package.json') }}
+
+    - name: Restore the file cache
+      uses: actions/cache@v5
+      with:
+        path: files
+        key: files
 
     - name: Install packages
       run: npm i --include-dev
