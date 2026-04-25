@@ -1,7 +1,7 @@
 {
   "name": "gesel",
   "description": "Client-side search for gene set selections",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "type": "module",
   "main": "src/index.js",
   "license": "MIT",
@@ -26,5 +26,5 @@
     "type": "git",
     "url": "https://github.com/gesel-inc/gesel.js"
   },
-  "homepage": "https://ltla.github.io/gesel.js"
+  "homepage": "https://gesel-inc.github.io/gesel.js"
 }
