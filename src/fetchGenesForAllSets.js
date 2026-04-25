@@ -1,10 +1,15 @@
 import * as utils from "./utils.js";
 
 /**
+ * Fetch the gene membership of all sets in the Gesel database.
+ *
+ * If this function is called once, the returned list will be cached in memory and re-used in subsequent calls to this function.
+ * The cached data will also be used to speed up calls to {@linkcode fetchGenesForSomeSets}.
+ *
  * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
  * @param {object} config - Configuration object, see {@linkcode newConfig}.
  *
- * @return {?Array} Array of length equal to the total number of sets for this `species`.
+ * @return {Array} Array of length equal to the total number of sets for this `species`.
  * Each element corresponds to an entry in {@linkcode fetchAllSets} and is a Uint32Array containing the IDs for all genes belonging to that set.
  * Gene IDs refer to indices in {@linkcode fetchAllGenes}.
  *

@@ -2,6 +2,11 @@ import { decompressLines } from "./utils.js";
 import { fetchAllCollections } from "./fetchAllCollections.js";
 
 /**
+ * Fetch information about all gene sets in the Gesel database.
+ *
+ * If this function is called once, the data frame will be cached in memory and re-used in subsequent calls to this function.
+ * The cached data will also be used to speed up calls to {@linkcode fetchSomeSets}.
+ *
  * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
  * @param {object} config - Configuration object, see {@linkcode newConfig}.
  *

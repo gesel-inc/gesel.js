@@ -54,6 +54,8 @@ async function initialize(species, config) {
 }
 
 /**
+ * Get the size of each gene set.
+ *
  * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
  * @param {object} config - Configuration object, see {@linkcode newConfig}.
  * @return {Array} Number of genes in each set.
@@ -75,6 +77,8 @@ export async function fetchSetSizes(species, config) {
 }
 
 /**
+ * Get the total number of gene sets.
+ *
  * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
  * @param {object} config - Configuration object, see {@linkcode newConfig}.
  * @return {number} Total number of sets for this species.
@@ -91,6 +95,15 @@ export async function numberOfSets(species, config) {
 }
 
 /**
+ * Fetch the details of some gene sets from the Gesel database.
+ * This can be more efficient than calling {@linkcode fetchAllSets} when only a few sets are of interest.
+ *
+ * Every time this function is called, information from the requested `sets` will be added to an in-memory cache.
+ * Subsequent calls to this function will re-use as many of the cached sets as possible before making new requests to the Gesel database.
+ *
+ * If {@linkcode fetchAllSets} was previously called, its cached data will be directly used by `fetchSomeSets` to avoid performing extra requests to the database.
+ * If `sets` is large, it may be more efficient to call {@linkcode fetchAllSets} to prepare the cache before calling this function.
+ *
  * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
  * @param {Array} sets - Array of set IDs.
  * Each ID is a row index in the array returned by {@linkcode fetchAllSets}. 

@@ -28,6 +28,15 @@ async function initialize(species, config) {
 }
 
 /**
+ * Count the number of genes in the Gesel database that belong to at least one set.
+ *
+ * The return value should be used as the total number of balls when performing a hypergeometric test for gene set enrichment,
+ * instead of the length of the array returned by {@linkcode fetchAllGenes}.
+ * This ensures that uninteresting genes like pseudo-genes or predicted genes are ignored during the calculation.
+ * Otherwise, unknown genes would inappropriately increase the number of balls and understate the enrichment p-values.
+ *
+ * See also the documentation for {@linkcode fetchSetsForSomeGenes} for some comments about caching. 
+ *
  * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
  * @param {object} config - Configuration object, see {@linkcode newConfig}.
  *
@@ -56,6 +65,15 @@ export async function effectiveNumberOfGenes(species, config) {
 }
 
 /**
+ * Fetch the identities of sets that contain some genes in the Gesel database.
+ * This can be more efficient than {@linkcode fetchSetsForAllGenes} if only a few genes are of interest.
+ *
+ * Every time this function is called, information from the requested `genes` will be added to an in-memory cache.
+ * Subsequent calls to this function will re-use as many of the cached genes as possible before making new requests to the Gesel database.
+ *
+ * If {@linkcode fetchSetsForAllGenes} is called, its cached data will be directly used by `fetchSetsForSomeGenes` to avoid extra requests to the database.
+ * If `genes` is large, it may be more efficient to call {@linkcode fetchSetsForAllGenes} to prepare the cache before calling this function.
+ *
  * @param {string} species - The taxonomy ID of the species of interest, e.g., `"9606"` for human.
  * @param {Array} genes - Array of gene IDs.
  * Each ID is a row index in any of the arrays returned by {@linkcode fetchAllGenes}.
