@@ -67,7 +67,7 @@ export async function fetchSetSizes(species, config) {
         const everything = await fetchAllSets(species, config);
         let output = [];
         for (const x of everything) {
-            output.push(x.length);
+            output.push(x.size);
         }
         return output;
     }

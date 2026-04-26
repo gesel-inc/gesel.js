@@ -32,4 +32,6 @@ test("fetchSomeSets work correctly", async () => {
     await gesel.fetchAllSets("10090", tconf);
     let preloaded = await gesel.fetchSomeSets("10090", chosen, tconf);
     expect(preloaded).toEqual(test);
+    expect(await gesel.fetchSetSizes("10090", tconf)).toEqual(all_sizes);
+    expect(await gesel.numberOfSets("10090", tconf)).toEqual(everything.length);
 })
