@@ -34,7 +34,6 @@ export async function mapGenesByIdentifier(species, type, config, { lowerCase = 
     let tfound = host.get(type);
     if (typeof tfound === "undefined") {
         tfound = new Map;
-        host.set(type, tfound);
 
         let _genes = (await fetchAllGenes(species, config, { types: [ type ] })).get(type);
         for (var i = 0; i < _genes.length; i++) {
@@ -55,6 +54,8 @@ export async function mapGenesByIdentifier(species, type, config, { lowerCase = 
         for (const [key, val] of tfound) {
             tfound.set(key, Array.from(val));
         }
+
+        host.set(type, tfound);
     }
 
     return tfound;

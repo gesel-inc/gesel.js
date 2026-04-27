@@ -37,12 +37,10 @@ export async function fetchAllSets(species, config) {
         return found;
     }
 
-    found = [];
-    cache.set(species, found);
-
     var [ sres, collections ] = await Promise.all([config.fetchFile(species + "_sets.tsv.gz"), fetchAllCollections(species, config)]);
     var set_data = await decompressLines(sres);
 
+    found = [];
     for (var i = 0; i < set_data.length; i++) {
         let x = set_data[i];
         var details = x.split("\t");
@@ -66,5 +64,6 @@ export async function fetchAllSets(species, config) {
         start += len;
     }
 
+    cache.set(species, found);
     return found;
 }

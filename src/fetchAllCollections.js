@@ -40,13 +40,12 @@ export async function fetchAllCollections(species, config) {
         return target;
     }
 
-    target = [];
-    cache.set(species, target);
-
     var cres = await config.fetchFile(species + "_collections.tsv.gz");
     var coll_data = await decompressLines(cres);
 
     var start = 0;
+    target = [];
+
     for (var i = 0; i < coll_data.length; i++) {
         let x = coll_data[i];
         var details = x.split("\t");
@@ -63,5 +62,6 @@ export async function fetchAllCollections(species, config) {
         start += len;
     }
 
+    cache.set(species, target);
     return target;
 }
